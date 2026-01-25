@@ -1,0 +1,46 @@
+# Home Cookbook - Docker Compose Configuration
+# Deploy on Synology NAS using Container Manager
+
+version: '3.8'
+
+services:
+  cookbook:
+    build: .
+    container_name: home-cookbook
+    restart: unless-stopped
+
+    ports:
+      - "8080:5000"  # Access via http://<synology-ip>:8080
+
+    volumes:
+      # Persist database on host - adjust path for your Synology
+      # Default: /volume1/docker/cookbook/data
+      - cookbook_data:/app/data
+
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:////app/data/cookbook.db
+      - SECRET_KEY=${SECRET_KEY:-please-change-this-secret-key-in-production}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - cookbook-network
+
+volumes:
+  cookbook_data:
+    driver: local
+    # For Synology, you may want to specify a local path:
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /volume1/docker/cookbook/data
+
+networks:
+  cookbook-network:
+    driver: bridge

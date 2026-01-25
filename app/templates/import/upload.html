@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Import Recipes - Home Cookbook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="mb-4">
+            <i class="bi bi-upload me-2"></i>Import Recipes
+        </h1>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Upload CSV File</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('import_export.upload') }}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                        <small class="text-muted">Upload a CSV file with your recipes. Max file size: 5MB</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload me-1"></i>Upload & Preview
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">CSV Template</h5>
+            </div>
+            <div class="card-body">
+                <p>Download our template to ensure your recipes are formatted correctly:</p>
+                <a href="{{ url_for('import_export.download_template') }}" class="btn btn-success">
+                    <i class="bi bi-download me-1"></i>Download CSV Template
+                </a>
+
+                <hr class="my-4">
+
+                <h6>CSV Format Requirements:</h6>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>title</code></td>
+                            <td><span class="badge bg-danger">Yes</span></td>
+                            <td>Recipe name</td>
+                        </tr>
+                        <tr>
+                            <td><code>category</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Category name (created if doesn't exist)</td>
+                        </tr>
+                        <tr>
+                            <td><code>description</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Short description</td>
+                        </tr>
+                        <tr>
+                            <td><code>prep_time_minutes</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Prep time in minutes</td>
+                        </tr>
+                        <tr>
+                            <td><code>cook_time_minutes</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Cook time in minutes</td>
+                        </tr>
+                        <tr>
+                            <td><code>servings</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Number of servings</td>
+                        </tr>
+                        <tr>
+                            <td><code>servings_unit</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>e.g., "servings", "pieces", "cups"</td>
+                        </tr>
+                        <tr>
+                            <td><code>ingredients</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Pipe-separated list: <code>2 cups flour|1 tsp salt</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>instructions</code></td>
+                            <td><span class="badge bg-danger">Yes</span></td>
+                            <td>Step-by-step instructions (line breaks allowed)</td>
+                        </tr>
+                        <tr>
+                            <td><code>notes</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Additional notes or tips</td>
+                        </tr>
+                        <tr>
+                            <td><code>source</code></td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                            <td>Where the recipe came from</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info mt-3">
+                    <h6><i class="bi bi-info-circle me-2"></i>Tips</h6>
+                    <ul class="mb-0">
+                        <li>Use <strong>pipe characters (|)</strong> to separate ingredients: <code>2 cups flour|1 tsp salt|1 egg</code></li>
+                        <li>Ingredients are parsed automatically - include quantity, unit, and name: <code>2 cups all-purpose flour, sifted</code></li>
+                        <li>Instructions can include line breaks within the cell</li>
+                        <li>Wrap text containing commas in double quotes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Export Recipes</h5>
+            </div>
+            <div class="card-body">
+                <p>Export all your recipes to a CSV file for backup or sharing:</p>
+                <a href="{{ url_for('import_export.export') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-download me-1"></i>Export All Recipes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

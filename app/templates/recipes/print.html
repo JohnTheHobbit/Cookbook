@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ recipe.title }} - Print</title>
+    <style>
+        /* Print-optimized styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #333;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+
+        h1 {
+            font-size: 18pt;
+            border-bottom: 2pt solid #333;
+            padding-bottom: 0.25in;
+            margin-bottom: 0.25in;
+        }
+
+        .description {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 0.25in;
+        }
+
+        .meta {
+            display: flex;
+            gap: 1in;
+            margin-bottom: 0.25in;
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.1in;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0.5in;
+            margin-top: 0.25in;
+        }
+
+        .ingredients {
+            border-right: 1px solid #ccc;
+            padding-right: 0.25in;
+        }
+
+        h2 {
+            font-size: 12pt;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 0.1in;
+            margin-bottom: 0.15in;
+        }
+
+        .ingredients ul {
+            list-style: none;
+        }
+
+        .ingredients li {
+            padding: 0.05in 0;
+            font-size: 10pt;
+        }
+
+        .instructions ol {
+            padding-left: 0.25in;
+        }
+
+        .instructions li {
+            padding: 0.1in 0;
+            font-size: 10pt;
+        }
+
+        .notes {
+            margin-top: 0.25in;
+            padding-top: 0.15in;
+            border-top: 1px dashed #ccc;
+            font-style: italic;
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .source {
+            margin-top: 0.25in;
+            font-size: 9pt;
+            color: #999;
+        }
+
+        .no-print {
+            margin-top: 0.5in;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+
+        @media screen {
+            .no-print button {
+                padding: 10px 20px;
+                font-size: 14px;
+                cursor: pointer;
+                background: #2c7be5;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+
+            .no-print button:hover {
+                background: #1a68d1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ recipe.title }}</h1>
+
+    {% if recipe.description %}
+        <p class="description">{{ recipe.description }}</p>
+    {% endif %}
+
+    <div class="meta">
+        {% if recipe.category %}
+            <span>{{ recipe.category.name }}</span>
+        {% endif %}
+        {% if recipe.prep_time_minutes %}
+            <span>Prep: {{ recipe.prep_time_minutes }} min</span>
+        {% endif %}
+        {% if recipe.cook_time_minutes %}
+            <span>Cook: {{ recipe.cook_time_minutes }} min</span>
+        {% endif %}
+        {% if recipe.servings %}
+            <span>Serves: {{ recipe.servings }} {{ recipe.servings_unit }}</span>
+        {% endif %}
+    </div>
+
+    <div class="content">
+        <div class="ingredients">
+            <h2>Ingredients</h2>
+            <ul>
+                {% for ing in recipe.ingredients %}
+                    <li>
+                        {% if ing.quantity %}{{ ing.quantity }}{% endif %}
+                        {% if ing.unit %}{{ ing.unit }}{% endif %}
+                        {{ ing.name }}
+                        {% if ing.preparation %}, {{ ing.preparation }}{% endif %}
+                        {% if ing.is_optional %}(optional){% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="instructions">
+            <h2>Instructions</h2>
+            <ol>
+                {% for step in recipe.instructions.split('\n') %}
+                    {% if step.strip() %}
+                        <li>{{ step.strip() }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+
+    {% if recipe.notes %}
+        <div class="notes">
+            <strong>Notes:</strong> {{ recipe.notes }}
+        </div>
+    {% endif %}
+
+    {% if recipe.source %}
+        <div class="source">
+            Source: {{ recipe.source }}
+        </div>
+    {% endif %}
+
+    <div class="no-print">
+        <button onclick="window.print()">Print Recipe</button>
+        <button onclick="window.close()">Close</button>
+    </div>
+</body>
+</html>

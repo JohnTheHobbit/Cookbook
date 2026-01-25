@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}All Recipes - Home Cookbook{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        {% if favorites_only %}
+            <i class="bi bi-heart-fill text-danger me-2"></i>Favorite Recipes
+        {% elif current_category %}
+            <i class="bi bi-tag me-2"></i>{{ current_category.name }}
+        {% else %}
+            <i class="bi bi-grid me-2"></i>All Recipes
+        {% endif %}
+    </h1>
+    <a href="{{ url_for('recipes.new') }}" class="btn btn-success">
+        <i class="bi bi-plus-lg me-1"></i>Add Recipe
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <div class="row g-3 align-items-center">
+        <div class="col-auto">
+            <label class="col-form-label">Category:</label>
+        </div>
+        <div class="col-auto">
+            <select class="form-select"
+                    onchange="window.location.href=this.value">
+                <option value="{{ url_for('recipes.index', favorites='true' if favorites_only else None, sort=sort_by) }}"
+                        {% if not current_category %}selected{% endif %}>
+                    All Categories
+                </option>
+                {% for cat in categories %}
+                    <option value="{{ url_for('recipes.index', category=cat.id, favorites='true' if favorites_only else None, sort=sort_by) }}"
+                            {% if current_category and current_category.id == cat.id %}selected{% endif %}>
+                        {{ cat.name }} ({{ cat.recipe_count }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="col-form-label">Sort:</label>
+        </div>
+        <div class="col-auto">
+            <select class="form-select"
+                    onchange="window.location.href=this.value">
+                <option value="{{ url_for('recipes.index', category=current_category.id if current_category else None, favorites='true' if favorites_only else None, sort='updated') }}"
+                        {% if sort_by == 'updated' %}selected{% endif %}>
+                    Recently Updated
+                </option>
+                <option value="{{ url_for('recipes.index', category=current_category.id if current_category else None, favorites='true' if favorites_only else None, sort='title') }}"
+                        {% if sort_by == 'title' %}selected{% endif %}>
+                    Alphabetical
+                </option>
+                <option value="{{ url_for('recipes.index', category=current_category.id if current_category else None, favorites='true' if favorites_only else None, sort='created') }}"
+                        {% if sort_by == 'created' %}selected{% endif %}>
+                    Recently Added
+                </option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="favoritesOnly"
+                       {% if favorites_only %}checked{% endif %}
+                       onchange="window.location.href='{{ url_for('recipes.index', category=current_category.id if current_category else None, sort=sort_by) }}' + (this.checked ? '&favorites=true' : '')">
+                <label class="form-check-label" for="favoritesOnly">
+                    <i class="bi bi-heart-fill text-danger"></i> Favorites Only
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recipe Grid -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="recipe-grid">
+    {% if recipes %}
+        {% for recipe in recipes %}
+            {% include 'components/recipe_card.html' %}
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="empty-state">
+                <i class="bi bi-journal-x"></i>
+                <h3>No recipes found</h3>
+                {% if favorites_only %}
+                    <p>You haven't marked any recipes as favorites yet.</p>
+                {% elif current_category %}
+                    <p>No recipes in this category yet.</p>
+                {% else %}
+                    <p>Start by adding your first recipe!</p>
+                {% endif %}
+                <a href="{{ url_for('recipes.new') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Add Recipe
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

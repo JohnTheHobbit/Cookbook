@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Search: {{ query }} - Home Cookbook{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">
+    <i class="bi bi-search me-2"></i>
+    Search Results{% if query %} for "{{ query }}"{% endif %}
+</h1>
+
+{% if recipes %}
+    <p class="text-muted mb-4">Found {{ recipes|length }} recipe{{ 's' if recipes|length != 1 else '' }}</p>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in recipes %}
+            {% include 'components/recipe_card.html' %}
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-search"></i>
+        <h3>No recipes found</h3>
+        {% if query %}
+            <p>No recipes match "{{ query }}". Try a different search term.</p>
+        {% else %}
+            <p>Enter a search term to find recipes.</p>
+        {% endif %}
+        <a href="{{ url_for('recipes.index') }}" class="btn btn-primary">
+            <i class="bi bi-grid me-1"></i>Browse All Recipes
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

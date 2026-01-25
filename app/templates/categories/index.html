@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Home Cookbook{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-tags me-2"></i>Categories</h1>
+    <a href="{{ url_for('categories.new') }}" class="btn btn-success">
+        <i class="bi bi-plus-lg me-1"></i>Add Category
+    </a>
+</div>
+
+{% if categories %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for category in categories %}
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title">
+                                <a href="{{ url_for('recipes.index', category=category.id) }}"
+                                   class="text-decoration-none text-dark">
+                                    {{ category.name }}
+                                </a>
+                            </h5>
+                            <span class="badge bg-primary">{{ category.recipe_count }}</span>
+                        </div>
+                        {% if category.description %}
+                            <p class="card-text text-muted">{{ category.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('recipes.index', category=category.id) }}"
+                               class="btn btn-outline-primary btn-sm">
+                                View Recipes
+                            </a>
+                            <a href="{{ url_for('categories.edit', id=category.id) }}"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if category.recipe_count == 0 %}
+                                <form action="{{ url_for('categories.delete', id=category.id) }}" method="POST"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Delete this category?')">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-tags"></i>
+        <h3>No categories yet</h3>
+        <p>Categories help organize your recipes. Create your first one!</p>
+        <a href="{{ url_for('categories.new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add Category
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

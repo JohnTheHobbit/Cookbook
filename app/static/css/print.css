@@ -1,0 +1,166 @@
+/* Print Stylesheet for Home Cookbook */
+
+@media print {
+    /* Hide non-essential elements */
+    nav,
+    footer,
+    .no-print,
+    .btn,
+    .unit-toggle,
+    .kitchen-mode-toggle,
+    .filter-bar,
+    .alert,
+    .form-control,
+    .dropdown-menu,
+    .breadcrumb {
+        display: none !important;
+    }
+
+    /* Reset background and colors */
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 11pt;
+        line-height: 1.4;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Container full width */
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
+    /* Recipe Title */
+    .recipe-header h1 {
+        font-size: 18pt;
+        border-bottom: 2pt solid black;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Meta information */
+    .recipe-meta {
+        font-size: 10pt;
+        margin-bottom: 1rem;
+    }
+
+    /* Two-column layout for ingredients and instructions */
+    .recipe-content {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    /* Ingredients section */
+    .ingredients-section {
+        border-right: 1px solid #ccc;
+        padding-right: 1rem;
+    }
+
+    .ingredients-section h2 {
+        font-size: 12pt;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 0.25rem;
+    }
+
+    .ingredients-list li {
+        font-size: 10pt;
+        padding: 0.25rem 0;
+        border-bottom: none;
+        page-break-inside: avoid;
+    }
+
+    /* Hide checkboxes in print */
+    .ingredient-checkbox {
+        display: none !important;
+    }
+
+    /* Instructions section */
+    .instructions-section h2 {
+        font-size: 12pt;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 0.25rem;
+    }
+
+    .instructions-list li {
+        font-size: 10pt;
+        padding: 0.5rem 0 0.5rem 2rem;
+        border-bottom: none;
+        page-break-inside: avoid;
+    }
+
+    .instructions-list li::before {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 9pt;
+        background-color: #333 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Notes section */
+    .notes-section {
+        margin-top: 1rem;
+        padding-top: 0.5rem;
+        border-top: 1px dashed #ccc;
+        font-size: 10pt;
+        font-style: italic;
+    }
+
+    /* Source */
+    .recipe-source {
+        margin-top: 1rem;
+        font-size: 9pt;
+        color: #666;
+    }
+
+    /* Page break controls */
+    .recipe-header {
+        page-break-after: avoid;
+    }
+
+    .ingredients-section,
+    .instructions-section,
+    .notes-section {
+        page-break-inside: avoid;
+    }
+
+    /* Links - show URL */
+    a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 9pt;
+        color: #666;
+    }
+
+    /* Remove shadows and borders */
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Force background colors where needed */
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* Print-specific recipe layout */
+@page {
+    margin: 1in;
+    size: letter;
+}
+
+@page :first {
+    margin-top: 0.5in;
+}

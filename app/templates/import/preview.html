@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Import Preview - Home Cookbook{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">
+    <i class="bi bi-eye me-2"></i>Import Preview
+</h1>
+
+{% if errors %}
+    <div class="alert alert-warning">
+        <h5><i class="bi bi-exclamation-triangle me-2"></i>Some rows had issues:</h5>
+        <ul class="mb-0">
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+{% if recipes %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>{{ recipes|length }}</strong> recipe{{ 's' if recipes|length != 1 else '' }} will be imported.
+        Review below and confirm.
+    </div>
+
+    <div class="table-responsive mb-4">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Ingredients</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for recipe in recipes %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <strong>{{ recipe.title }}</strong>
+                            {% if recipe.description %}
+                                <br><small class="text-muted">{{ recipe.description|truncate(50) }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if recipe.category %}
+                                <span class="badge bg-secondary">{{ recipe.category }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ recipe.ingredients|length }} items</td>
+                        <td>
+                            {% if recipe.prep_time_minutes or recipe.cook_time_minutes %}
+                                {{ (recipe.prep_time_minutes or 0) + (recipe.cook_time_minutes or 0) }} min
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <form action="{{ url_for('import_export.confirm_import') }}" method="POST">
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-check-lg me-1"></i>Confirm Import
+            </button>
+            <a href="{{ url_for('import_export.index') }}" class="btn btn-outline-secondary btn-lg">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% else %}
+    <div class="alert alert-danger">
+        <i class="bi bi-x-circle me-2"></i>
+        No valid recipes found in the uploaded file. Please check the format and try again.
+    </div>
+    <a href="{{ url_for('import_export.index') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Import
+    </a>
+{% endif %}
+{% endblock %}

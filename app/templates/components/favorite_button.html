@@ -1,0 +1,11 @@
+<button class="btn-favorite"
+        data-recipe-id="{{ recipe.id }}"
+        hx-post="{{ url_for('recipes.toggle_favorite', id=recipe.id) }}"
+        hx-swap="outerHTML"
+        title="{{ 'Remove from favorites' if recipe.is_favorite else 'Add to favorites' }}">
+    {% if recipe.is_favorite %}
+        <i class="bi bi-heart-fill heart-filled"></i>
+    {% else %}
+        <i class="bi bi-heart heart-empty"></i>
+    {% endif %}
+</button>

@@ -1,0 +1,14 @@
+{# Partial template for htmx recipe list updates #}
+{% if recipes %}
+    {% for recipe in recipes %}
+        {% include 'components/recipe_card.html' %}
+    {% endfor %}
+{% else %}
+    <div class="col-12">
+        <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <h3>No recipes found</h3>
+            <p>Try adjusting your search or filters.</p>
+        </div>
+    </div>
+{% endif %}

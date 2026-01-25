@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Home Cookbook{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-book text-primary me-2"></i>Home Cookbook
+        </h1>
+        <p class="lead text-muted">Your family's favorite recipes, all in one place.</p>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body d-flex align-items-center">
+                <i class="bi bi-journal-text fs-1 me-3"></i>
+                <div>
+                    <h3 class="mb-0">{{ total_recipes }}</h3>
+                    <p class="mb-0">Total Recipes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body d-flex align-items-center">
+                <i class="bi bi-heart-fill fs-1 me-3"></i>
+                <div>
+                    <h3 class="mb-0">{{ total_favorites }}</h3>
+                    <p class="mb-0">Favorites</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body d-flex align-items-center">
+                <i class="bi bi-tags fs-1 me-3"></i>
+                <div>
+                    <h3 class="mb-0">{{ categories|length }}</h3>
+                    <p class="mb-0">Categories</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories -->
+<div class="mb-4">
+    <h2 class="h4 mb-3">
+        <i class="bi bi-tags me-2"></i>Browse by Category
+    </h2>
+    <div class="d-flex flex-wrap gap-2">
+        {% for category in categories %}
+            <a href="{{ url_for('recipes.index', category=category.id) }}"
+               class="category-pill">
+                {{ category.name }}
+                <span class="badge bg-secondary ms-1">{{ category.recipe_count }}</span>
+            </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Favorite Recipes -->
+{% if favorite_recipes %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">
+            <i class="bi bi-heart-fill text-danger me-2"></i>Favorites
+        </h2>
+        <a href="{{ url_for('recipes.index', favorites='true') }}" class="btn btn-outline-primary btn-sm">
+            View All <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in favorite_recipes %}
+            {% include 'components/recipe_card.html' %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Recipes -->
+{% if recent_recipes %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">
+            <i class="bi bi-clock-history me-2"></i>Recently Updated
+        </h2>
+        <a href="{{ url_for('recipes.index') }}" class="btn btn-outline-primary btn-sm">
+            View All <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in recent_recipes %}
+            {% include 'components/recipe_card.html' %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Empty State -->
+{% if not recent_recipes and not favorite_recipes %}
+<div class="empty-state">
+    <i class="bi bi-journal-plus"></i>
+    <h3>No recipes yet</h3>
+    <p>Start building your cookbook by adding your first recipe!</p>
+    <a href="{{ url_for('recipes.new') }}" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-lg me-2"></i>Add Your First Recipe
+    </a>
+    <p class="mt-3">
+        <small>Or <a href="{{ url_for('import_export.index') }}">import recipes from a CSV file</a></small>
+    </p>
+</div>
+{% endif %}
+{% endblock %}

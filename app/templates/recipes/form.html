@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if recipe else 'Add' }} Recipe - Home Cookbook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <h1 class="mb-4">
+            <i class="bi bi-{{ 'pencil' if recipe else 'plus-lg' }} me-2"></i>
+            {{ 'Edit Recipe' if recipe else 'Add New Recipe' }}
+        </h1>
+
+        <form method="POST" action="{{ url_for('recipes.edit', id=recipe.id) if recipe else url_for('recipes.new') }}">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="title" class="form-label">Recipe Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="title" name="title"
+                                   value="{{ recipe.title if recipe else '' }}" required
+                                   placeholder="e.g., Grandma's Chocolate Chip Cookies">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="category_id" class="form-label">Category</label>
+                            <select class="form-select" id="category_id" name="category_id">
+                                <option value="">-- Select Category --</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.id }}"
+                                            {% if recipe and recipe.category_id == cat.id %}selected{% endif %}>
+                                        {{ cat.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="source" class="form-label">Source</label>
+                            <input type="text" class="form-control" id="source" name="source"
+                                   value="{{ recipe.source if recipe else '' }}"
+                                   placeholder="e.g., Family recipe, cookbook name, website">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="2"
+                                      placeholder="A short description of this recipe">{{ recipe.description if recipe else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Time & Servings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="prep_time_minutes" class="form-label">Prep Time (minutes)</label>
+                            <input type="number" class="form-control" id="prep_time_minutes" name="prep_time_minutes"
+                                   value="{{ recipe.prep_time_minutes if recipe and recipe.prep_time_minutes else '' }}"
+                                   min="0" placeholder="15">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="cook_time_minutes" class="form-label">Cook Time (minutes)</label>
+                            <input type="number" class="form-control" id="cook_time_minutes" name="cook_time_minutes"
+                                   value="{{ recipe.cook_time_minutes if recipe and recipe.cook_time_minutes else '' }}"
+                                   min="0" placeholder="30">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="servings" class="form-label">Servings</label>
+                            <input type="number" class="form-control" id="servings" name="servings"
+                                   value="{{ recipe.servings if recipe and recipe.servings else '' }}"
+                                   min="1" placeholder="4">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="servings_unit" class="form-label">Servings Unit</label>
+                            <input type="text" class="form-control" id="servings_unit" name="servings_unit"
+                                   value="{{ recipe.servings_unit if recipe else 'servings' }}"
+                                   placeholder="servings, pieces, cups">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Ingredients</h5>
+                    <button type="button" class="btn btn-success btn-sm" id="add-ingredient">
+                        <i class="bi bi-plus-lg me-1"></i>Add Ingredient
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2 text-muted small">
+                        <div class="row">
+                            <div class="col-2">Quantity</div>
+                            <div class="col-2">Unit</div>
+                            <div class="col-4">Ingredient</div>
+                            <div class="col-2">Preparation</div>
+                            <div class="col-1">Opt?</div>
+                            <div class="col-1"></div>
+                        </div>
+                    </div>
+                    <div id="ingredients-container">
+                        {% if recipe and recipe.ingredients.count() > 0 %}
+                            {% for ing in recipe.ingredients %}
+                                <div class="ingredient-row">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-2">
+                                            <input type="text" class="form-control form-control-sm"
+                                                   name="ingredient_quantity[]" placeholder="Qty"
+                                                   value="{{ ing.quantity if ing.quantity else '' }}">
+                                        </div>
+                                        <div class="col-2">
+                                            <select class="form-select form-select-sm" name="ingredient_unit[]">
+                                                <option value="">Unit</option>
+                                                {% for unit in ['cup', 'cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'ml', 'piece', 'clove', 'can', 'pkg'] %}
+                                                    <option value="{{ unit }}" {% if ing.unit == unit %}selected{% endif %}>{{ unit }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" class="form-control form-control-sm"
+                                                   name="ingredient_name[]" placeholder="Ingredient name" required
+                                                   value="{{ ing.name }}">
+                                        </div>
+                                        <div class="col-2">
+                                            <input type="text" class="form-control form-control-sm"
+                                                   name="ingredient_preparation[]" placeholder="Prep"
+                                                   value="{{ ing.preparation if ing.preparation else '' }}">
+                                        </div>
+                                        <div class="col-1 text-center">
+                                            <input type="checkbox" class="form-check-input"
+                                                   name="ingredient_optional[]" value="{{ loop.index0 }}"
+                                                   {% if ing.is_optional %}checked{% endif %} title="Optional">
+                                        </div>
+                                        <div class="col-1">
+                                            <button type="button" class="btn btn-sm btn-remove-ingredient" title="Remove">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Default empty ingredient row -->
+                            <div class="ingredient-row">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-2">
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="ingredient_quantity[]" placeholder="Qty">
+                                    </div>
+                                    <div class="col-2">
+                                        <select class="form-select form-select-sm" name="ingredient_unit[]">
+                                            <option value="">Unit</option>
+                                            <option value="cup">cup</option>
+                                            <option value="cups">cups</option>
+                                            <option value="tbsp">tbsp</option>
+                                            <option value="tsp">tsp</option>
+                                            <option value="oz">oz</option>
+                                            <option value="lb">lb</option>
+                                            <option value="g">g</option>
+                                            <option value="ml">ml</option>
+                                            <option value="piece">piece</option>
+                                            <option value="clove">clove</option>
+                                            <option value="can">can</option>
+                                            <option value="pkg">pkg</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="ingredient_name[]" placeholder="Ingredient name" required>
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="ingredient_preparation[]" placeholder="Prep">
+                                    </div>
+                                    <div class="col-1 text-center">
+                                        <input type="checkbox" class="form-check-input"
+                                               name="ingredient_optional[]" value="0" title="Optional">
+                                    </div>
+                                    <div class="col-1">
+                                        <button type="button" class="btn btn-sm btn-remove-ingredient" title="Remove">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Instructions <span class="text-danger">*</span></h5>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" id="instructions" name="instructions" rows="10" required
+                              placeholder="Enter each step on a new line:
+
+1. Preheat oven to 350°F.
+2. Mix dry ingredients in a bowl.
+3. Add wet ingredients and stir until combined.
+...">{{ recipe.instructions if recipe else '' }}</textarea>
+                    <small class="text-muted">Enter each step on a new line. Steps will be automatically numbered.</small>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Notes</h5>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" id="notes" name="notes" rows="3"
+                              placeholder="Any additional tips, variations, or personal notes...">{{ recipe.notes if recipe else '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Save Recipe
+                </button>
+                <a href="{{ url_for('recipes.show', id=recipe.id) if recipe else url_for('recipes.index') }}"
+                   class="btn btn-outline-secondary btn-lg">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
