@@ -239,10 +239,11 @@
                 <div id="sections-container">
                     {% if recipe and recipe.has_sections %}
                         {% for section in recipe.sections %}
-                            <div class="card mb-4 section-card" data-section-index="{{ loop.index0 }}">
+                            {% set section_idx = loop.index0 %}
+                            <div class="card mb-4 section-card" data-section-index="{{ section_idx }}">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <input type="text" class="form-control form-control-lg section-name-input"
-                                           name="section[{{ loop.index0 }}][name]"
+                                           name="section[{{ section_idx }}][name]"
                                            placeholder="Section Name (e.g., Shell, Filling)"
                                            value="{{ section.name }}">
                                     <button type="button" class="btn btn-sm btn-outline-danger btn-remove-section ms-2" title="Remove Section">
@@ -272,11 +273,11 @@
                                                 <div class="row g-2 align-items-center">
                                                     <div class="col-2">
                                                         <input type="text" class="form-control form-control-sm"
-                                                               name="section[{{ loop.parent.loop.index0 }}][ingredient][{{ loop.index0 }}][quantity]"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][quantity]"
                                                                placeholder="Qty" value="{{ ing.quantity if ing.quantity else '' }}">
                                                     </div>
                                                     <div class="col-2">
-                                                        <select class="form-select form-select-sm" name="section[{{ loop.parent.loop.index0 }}][ingredient][{{ loop.index0 }}][unit]">
+                                                        <select class="form-select form-select-sm" name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][unit]">
                                                             <option value="">Unit</option>
                                                             {% for unit in ['cup', 'cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'ml', 'piece', 'clove', 'can', 'pkg'] %}
                                                                 <option value="{{ unit }}" {% if ing.unit == unit %}selected{% endif %}>{{ unit }}</option>
@@ -285,17 +286,17 @@
                                                     </div>
                                                     <div class="col-3">
                                                         <input type="text" class="form-control form-control-sm"
-                                                               name="section[{{ loop.parent.loop.index0 }}][ingredient][{{ loop.index0 }}][name]"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][name]"
                                                                placeholder="Ingredient" value="{{ ing.name }}">
                                                     </div>
                                                     <div class="col-2">
                                                         <input type="text" class="form-control form-control-sm"
-                                                               name="section[{{ loop.parent.loop.index0 }}][ingredient][{{ loop.index0 }}][preparation]"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][preparation]"
                                                                placeholder="Prep" value="{{ ing.preparation if ing.preparation else '' }}">
                                                     </div>
                                                     <div class="col-1 text-center">
                                                         <input type="checkbox" class="form-check-input"
-                                                               name="section[{{ loop.parent.loop.index0 }}][ingredient][{{ loop.index0 }}][optional]"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][optional]"
                                                                value="true" {% if ing.is_optional %}checked{% endif %} title="Optional">
                                                     </div>
                                                     <div class="col-2">
@@ -309,7 +310,7 @@
                                     </div>
 
                                     <h6 class="mt-4">Instructions <span class="text-danger">*</span></h6>
-                                    <textarea class="form-control" name="section[{{ loop.index0 }}][instructions]" rows="6"
+                                    <textarea class="form-control" name="section[{{ section_idx }}][instructions]" rows="6"
                                               placeholder="Instructions for this section...">{{ section.instructions }}</textarea>
                                 </div>
                             </div>
