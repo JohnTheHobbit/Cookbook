@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from io import StringIO, BytesIO
 import csv
 from app import db
-from app.models import Recipe, Ingredient, Category
+from app.models import Recipe, Ingredient, Category, RecipeSection, SectionIngredient
 from app.services.csv_handler import parse_recipe_csv, create_csv_export
 
 bp = Blueprint('import_export', __name__)
@@ -110,6 +110,8 @@ def confirm_import():
                     db.session.add(category)
                     db.session.flush()
 
+            has_sections = recipe_data.get('has_sections', False)
+
             # Create recipe
             recipe = Recipe(
                 title=recipe_data['title'],
@@ -119,25 +121,50 @@ def confirm_import():
                 cook_time_minutes=recipe_data.get('cook_time_minutes'),
                 servings=recipe_data.get('servings'),
                 servings_unit=recipe_data.get('servings_unit', 'servings'),
-                instructions=recipe_data['instructions'],
+                instructions=recipe_data.get('instructions') if not has_sections else None,
+                has_sections=has_sections,
                 notes=recipe_data.get('notes'),
                 source=recipe_data.get('source')
             )
             db.session.add(recipe)
             db.session.flush()
 
-            # Add ingredients
-            for i, ing_data in enumerate(recipe_data.get('ingredients', [])):
-                ingredient = Ingredient(
-                    recipe_id=recipe.id,
-                    name=ing_data['name'],
-                    quantity=ing_data.get('quantity'),
-                    unit=ing_data.get('unit'),
-                    preparation=ing_data.get('preparation'),
-                    is_optional=ing_data.get('is_optional', False),
-                    sort_order=i
-                )
-                db.session.add(ingredient)
+            if has_sections:
+                # Add sections with their ingredients
+                for section_order, section_data in enumerate(recipe_data.get('sections', [])):
+                    section = RecipeSection(
+                        recipe_id=recipe.id,
+                        name=section_data['name'],
+                        instructions=section_data['instructions'],
+                        sort_order=section_order
+                    )
+                    db.session.add(section)
+                    db.session.flush()
+
+                    for ing_order, ing_data in enumerate(section_data.get('ingredients', [])):
+                        ingredient = SectionIngredient(
+                            section_id=section.id,
+                            name=ing_data['name'],
+                            quantity=ing_data.get('quantity'),
+                            unit=ing_data.get('unit'),
+                            preparation=ing_data.get('preparation'),
+                            is_optional=ing_data.get('is_optional', False),
+                            sort_order=ing_order
+                        )
+                        db.session.add(ingredient)
+            else:
+                # Add simple ingredients
+                for i, ing_data in enumerate(recipe_data.get('ingredients', [])):
+                    ingredient = Ingredient(
+                        recipe_id=recipe.id,
+                        name=ing_data['name'],
+                        quantity=ing_data.get('quantity'),
+                        unit=ing_data.get('unit'),
+                        preparation=ing_data.get('preparation'),
+                        is_optional=ing_data.get('is_optional', False),
+                        sort_order=i
+                    )
+                    db.session.add(ingredient)
 
             imported_count += 1
 

@@ -27,39 +27,109 @@ def parse_recipe_csv(content: str) -> tuple[list[dict], list[str]]:
                 errors.append(f'Row {row_num}: Title is required')
                 continue
 
-            instructions = row.get('instructions', '').strip()
-            if not instructions:
-                errors.append(f'Row {row_num}: Instructions are required')
-                continue
-
-            # Parse ingredients
             ingredients_str = row.get('ingredients', '')
-            ingredients = parse_ingredients(ingredients_str)
+            instructions_str = row.get('instructions', '').strip()
 
-            # Parse numeric fields
-            prep_time = parse_int(row.get('prep_time_minutes', ''))
-            cook_time = parse_int(row.get('cook_time_minutes', ''))
-            servings = parse_int(row.get('servings', ''))
+            # Check if this is a sectioned recipe (contains [Section Name] markers)
+            has_sections = bool(re.search(r'\[.+?\]', ingredients_str)) or bool(re.search(r'\[.+?\]', instructions_str))
 
-            recipe = {
-                'title': title,
-                'category': row.get('category', '').strip() or None,
-                'description': row.get('description', '').strip() or None,
-                'prep_time_minutes': prep_time,
-                'cook_time_minutes': cook_time,
-                'servings': servings,
-                'servings_unit': row.get('servings_unit', 'servings').strip() or 'servings',
-                'ingredients': ingredients,
-                'instructions': instructions,
-                'notes': row.get('notes', '').strip() or None,
-                'source': row.get('source', '').strip() or None
-            }
+            if has_sections:
+                # Parse sectioned recipe
+                sections = parse_sections(ingredients_str, instructions_str)
+                if not sections:
+                    errors.append(f'Row {row_num}: Sectioned recipe must have at least one section with instructions')
+                    continue
+
+                recipe = {
+                    'title': title,
+                    'category': row.get('category', '').strip() or None,
+                    'description': row.get('description', '').strip() or None,
+                    'prep_time_minutes': parse_int(row.get('prep_time_minutes', '')),
+                    'cook_time_minutes': parse_int(row.get('cook_time_minutes', '')),
+                    'servings': parse_int(row.get('servings', '')),
+                    'servings_unit': row.get('servings_unit', 'servings').strip() or 'servings',
+                    'has_sections': True,
+                    'sections': sections,
+                    'notes': row.get('notes', '').strip() or None,
+                    'source': row.get('source', '').strip() or None
+                }
+            else:
+                # Parse simple recipe
+                if not instructions_str:
+                    errors.append(f'Row {row_num}: Instructions are required')
+                    continue
+
+                ingredients = parse_ingredients(ingredients_str)
+
+                recipe = {
+                    'title': title,
+                    'category': row.get('category', '').strip() or None,
+                    'description': row.get('description', '').strip() or None,
+                    'prep_time_minutes': parse_int(row.get('prep_time_minutes', '')),
+                    'cook_time_minutes': parse_int(row.get('cook_time_minutes', '')),
+                    'servings': parse_int(row.get('servings', '')),
+                    'servings_unit': row.get('servings_unit', 'servings').strip() or 'servings',
+                    'has_sections': False,
+                    'ingredients': ingredients,
+                    'instructions': instructions_str,
+                    'notes': row.get('notes', '').strip() or None,
+                    'source': row.get('source', '').strip() or None
+                }
+
             recipes.append(recipe)
 
         except Exception as e:
             errors.append(f'Row {row_num}: {str(e)}')
 
     return recipes, errors
+
+
+def parse_sections(ingredients_str: str, instructions_str: str) -> list[dict]:
+    """
+    Parse sectioned ingredients and instructions.
+
+    Format:
+        ingredients: "[Shell]2 cups flour|1/2 cup butter[Filling]2 cups ricotta|1 cup sugar"
+        instructions: "[Shell]Step 1\\nStep 2[Filling]Step 1\\nStep 2"
+
+    Returns:
+        List of section dictionaries with name, ingredients, and instructions
+    """
+    sections = {}
+
+    # Parse ingredients by section
+    if ingredients_str:
+        # Split by section markers
+        section_pattern = r'\[([^\]]+)\]'
+        parts = re.split(section_pattern, ingredients_str)
+
+        # parts will be: ['', 'Section1', 'ingredients1', 'Section2', 'ingredients2', ...]
+        i = 1
+        while i < len(parts):
+            section_name = parts[i].strip()
+            section_ingredients = parts[i + 1] if i + 1 < len(parts) else ''
+            if section_name not in sections:
+                sections[section_name] = {'name': section_name, 'ingredients': [], 'instructions': ''}
+            sections[section_name]['ingredients'] = parse_ingredients(section_ingredients)
+            i += 2
+
+    # Parse instructions by section
+    if instructions_str:
+        section_pattern = r'\[([^\]]+)\]'
+        parts = re.split(section_pattern, instructions_str)
+
+        i = 1
+        while i < len(parts):
+            section_name = parts[i].strip()
+            section_instructions = parts[i + 1] if i + 1 < len(parts) else ''
+            if section_name not in sections:
+                sections[section_name] = {'name': section_name, 'ingredients': [], 'instructions': ''}
+            sections[section_name]['instructions'] = section_instructions.strip()
+            i += 2
+
+    # Convert to list and filter out sections without instructions
+    result = [s for s in sections.values() if s['instructions']]
+    return result
 
 
 def parse_ingredients(ingredient_string: str) -> list[dict]:
@@ -230,6 +300,21 @@ def parse_int(value: str) -> int:
         return None
 
 
+def format_ingredient(ing) -> str:
+    """Format a single ingredient for CSV export."""
+    parts = []
+    if ing.quantity:
+        parts.append(str(ing.quantity))
+    if ing.unit:
+        parts.append(ing.unit)
+    parts.append(ing.name)
+    if ing.preparation:
+        parts.append(f', {ing.preparation}')
+    if ing.is_optional:
+        parts.append(' (optional)')
+    return ' '.join(parts)
+
+
 def create_csv_export(recipes) -> str:
     """
     Export recipes to CSV format.
@@ -250,20 +335,28 @@ def create_csv_export(recipes) -> str:
     writer.writeheader()
 
     for recipe in recipes:
-        # Format ingredients as pipe-separated
-        ingredients_list = []
-        for ing in recipe.ingredients:
-            parts = []
-            if ing.quantity:
-                parts.append(str(ing.quantity))
-            if ing.unit:
-                parts.append(ing.unit)
-            parts.append(ing.name)
-            if ing.preparation:
-                parts.append(f', {ing.preparation}')
-            if ing.is_optional:
-                parts.append(' (optional)')
-            ingredients_list.append(' '.join(parts))
+        if recipe.has_sections:
+            # Format sectioned recipe
+            ingredients_parts = []
+            instructions_parts = []
+
+            for section in recipe.sections:
+                # Format section ingredients
+                section_ingredients = [format_ingredient(ing) for ing in section.ingredients]
+                if section_ingredients:
+                    ingredients_parts.append(f'[{section.name}]' + '|'.join(section_ingredients))
+
+                # Format section instructions
+                if section.instructions:
+                    instructions_parts.append(f'[{section.name}]{section.instructions}')
+
+            ingredients_str = ''.join(ingredients_parts)
+            instructions_str = ''.join(instructions_parts)
+        else:
+            # Format simple recipe
+            ingredients_list = [format_ingredient(ing) for ing in recipe.ingredients]
+            ingredients_str = '|'.join(ingredients_list)
+            instructions_str = recipe.instructions or ''
 
         writer.writerow({
             'title': recipe.title,
@@ -273,8 +366,8 @@ def create_csv_export(recipes) -> str:
             'cook_time_minutes': recipe.cook_time_minutes or '',
             'servings': recipe.servings or '',
             'servings_unit': recipe.servings_unit or 'servings',
-            'ingredients': '|'.join(ingredients_list),
-            'instructions': recipe.instructions,
+            'ingredients': ingredients_str,
+            'instructions': instructions_str,
             'notes': recipe.notes or '',
             'source': recipe.source or ''
         })
