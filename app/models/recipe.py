@@ -14,20 +14,28 @@ class Recipe(db.Model):
     cook_time_minutes = db.Column(db.Integer)
     servings = db.Column(db.Integer)
     servings_unit = db.Column(db.String(50), default='servings')
-    instructions = db.Column(db.Text, nullable=False)
+    instructions = db.Column(db.Text, nullable=True)  # Nullable for sectioned recipes
     notes = db.Column(db.Text)
     source = db.Column(db.String(500))
     is_favorite = db.Column(db.Boolean, default=False)
+    has_sections = db.Column(db.Boolean, default=False)  # Whether recipe uses sections
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationship
+    # Relationships
     ingredients = db.relationship(
         'Ingredient',
         backref='recipe',
         lazy='dynamic',
         cascade='all, delete-orphan',
         order_by='Ingredient.sort_order'
+    )
+    sections = db.relationship(
+        'RecipeSection',
+        backref='recipe',
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        order_by='RecipeSection.sort_order'
     )
 
     def __repr__(self):
@@ -68,11 +76,15 @@ class Recipe(db.Model):
             'notes': self.notes,
             'source': self.source,
             'is_favorite': self.is_favorite,
+            'has_sections': self.has_sections,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
         if include_ingredients:
-            data['ingredients'] = [i.to_dict() for i in self.ingredients]
+            if self.has_sections:
+                data['sections'] = [s.to_dict() for s in self.sections]
+            else:
+                data['ingredients'] = [i.to_dict() for i in self.ingredients]
         return data
 
 
@@ -155,3 +167,87 @@ def format_quantity(value):
 
     # Default to decimal
     return str(value)
+
+
+class RecipeSection(db.Model):
+    """Recipe section model for multi-part recipes."""
+    __tablename__ = 'recipe_sections'
+
+    id = db.Column(db.Integer, primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    instructions = db.Column(db.Text, nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
+
+    # Relationship to ingredients within this section
+    ingredients = db.relationship(
+        'SectionIngredient',
+        backref='section',
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        order_by='SectionIngredient.sort_order'
+    )
+
+    def __repr__(self):
+        return f'<RecipeSection {self.name}>'
+
+    def to_dict(self, include_ingredients=True):
+        """Convert to dictionary."""
+        data = {
+            'id': self.id,
+            'recipe_id': self.recipe_id,
+            'name': self.name,
+            'instructions': self.instructions,
+            'sort_order': self.sort_order,
+        }
+        if include_ingredients:
+            data['ingredients'] = [i.to_dict() for i in self.ingredients]
+        return data
+
+
+class SectionIngredient(db.Model):
+    """Ingredient model for sectioned recipes."""
+    __tablename__ = 'section_ingredients'
+
+    id = db.Column(db.Integer, primary_key=True)
+    section_id = db.Column(db.Integer, db.ForeignKey('recipe_sections.id'), nullable=False)
+    quantity = db.Column(db.Float)
+    unit = db.Column(db.String(50))
+    unit_type = db.Column(db.String(10), default='us')  # 'us' or 'metric'
+    name = db.Column(db.String(200), nullable=False)
+    preparation = db.Column(db.String(200))
+    is_optional = db.Column(db.Boolean, default=False)
+    sort_order = db.Column(db.Integer, default=0)
+
+    def __repr__(self):
+        return f'<SectionIngredient {self.name}>'
+
+    @property
+    def formatted(self):
+        """Return formatted ingredient string."""
+        parts = []
+        if self.quantity:
+            parts.append(format_quantity(self.quantity))
+        if self.unit:
+            parts.append(self.unit)
+        parts.append(self.name)
+        if self.preparation:
+            parts.append(f', {self.preparation}')
+        if self.is_optional:
+            parts.append(' (optional)')
+        return ' '.join(parts)
+
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            'id': self.id,
+            'section_id': self.section_id,
+            'quantity': self.quantity,
+            'unit': self.unit,
+            'unit_type': self.unit_type,
+            'name': self.name,
+            'preparation': self.preparation,
+            'is_optional': self.is_optional,
+            'sort_order': self.sort_order,
+            'formatted': self.formatted
+        }

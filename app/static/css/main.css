@@ -303,6 +303,51 @@ main {
     margin-bottom: 0.5rem;
 }
 
+/* Recipe Sections */
+.recipe-section {
+    border-left: 4px solid var(--primary-color);
+    padding-left: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.recipe-section:not(:last-child) {
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+/* Section cards in form */
+.section-card {
+    border-left: 4px solid var(--primary-color);
+}
+
+.section-card .card-header {
+    background-color: rgba(44, 123, 229, 0.05);
+}
+
+.section-name-input {
+    font-weight: 600;
+    border: none;
+    background: transparent;
+}
+
+.section-name-input:focus {
+    background: white;
+    border: 1px solid #dee2e6;
+    box-shadow: none;
+}
+
+.btn-remove-section-ingredient {
+    color: var(--danger-color);
+    cursor: pointer;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .recipe-header h1 {

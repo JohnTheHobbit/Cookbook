@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app import db
-from app.models import Recipe, Ingredient, Category
+from app.models import Recipe, Ingredient, Category, RecipeSection, SectionIngredient
 
 bp = Blueprint('recipes', __name__)
 
@@ -129,13 +129,11 @@ def save_recipe(recipe):
         cook_time = request.form.get('cook_time_minutes', type=int)
         servings = request.form.get('servings', type=int)
         servings_unit = request.form.get('servings_unit', 'servings').strip()
-        instructions = request.form.get('instructions', '').strip()
         notes = request.form.get('notes', '').strip()
         source = request.form.get('source', '').strip()
 
-        if not instructions:
-            flash('Instructions are required.', 'error')
-            return redirect(request.url)
+        # Check if using sections mode
+        has_sections = request.form.get('has_sections') == 'true'
 
         # Create or update recipe
         if recipe is None:
@@ -149,38 +147,92 @@ def save_recipe(recipe):
         recipe.cook_time_minutes = cook_time
         recipe.servings = servings
         recipe.servings_unit = servings_unit
-        recipe.instructions = instructions
         recipe.notes = notes or None
         recipe.source = source or None
+        recipe.has_sections = has_sections
 
-        # Handle ingredients
-        # First, remove existing ingredients
-        Ingredient.query.filter_by(recipe_id=recipe.id).delete()
+        if has_sections:
+            # Clear simple mode data
+            recipe.instructions = None
+            Ingredient.query.filter_by(recipe_id=recipe.id).delete()
 
-        # Add new ingredients
-        ingredient_names = request.form.getlist('ingredient_name[]')
-        ingredient_quantities = request.form.getlist('ingredient_quantity[]')
-        ingredient_units = request.form.getlist('ingredient_unit[]')
-        ingredient_preps = request.form.getlist('ingredient_preparation[]')
-        ingredient_optionals = request.form.getlist('ingredient_optional[]')
+            # Clear existing sections
+            for section in recipe.sections.all():
+                SectionIngredient.query.filter_by(section_id=section.id).delete()
+            RecipeSection.query.filter_by(recipe_id=recipe.id).delete()
 
-        for i, name in enumerate(ingredient_names):
-            if not name.strip():
-                continue
+            # Parse and save sections
+            sections = parse_sections_from_form(request.form)
 
-            quantity_str = ingredient_quantities[i] if i < len(ingredient_quantities) else ''
-            quantity = parse_quantity(quantity_str) if quantity_str.strip() else None
+            if not sections:
+                flash('At least one section with instructions is required.', 'error')
+                return redirect(request.url)
 
-            ingredient = Ingredient(
-                recipe=recipe,
-                name=name.strip(),
-                quantity=quantity,
-                unit=ingredient_units[i].strip() if i < len(ingredient_units) else None,
-                preparation=ingredient_preps[i].strip() if i < len(ingredient_preps) else None,
-                is_optional=str(i) in ingredient_optionals,
-                sort_order=i
-            )
-            db.session.add(ingredient)
+            for section_order, section_data in enumerate(sections):
+                if not section_data['instructions'].strip():
+                    continue
+
+                section = RecipeSection(
+                    recipe=recipe,
+                    name=section_data['name'],
+                    instructions=section_data['instructions'],
+                    sort_order=section_order
+                )
+                db.session.add(section)
+                db.session.flush()  # Get section.id
+
+                for ing_order, ing_data in enumerate(section_data['ingredients']):
+                    ingredient = SectionIngredient(
+                        section_id=section.id,
+                        name=ing_data['name'],
+                        quantity=ing_data['quantity'],
+                        unit=ing_data['unit'],
+                        preparation=ing_data['preparation'],
+                        is_optional=ing_data['is_optional'],
+                        sort_order=ing_order
+                    )
+                    db.session.add(ingredient)
+        else:
+            # Simple mode - original behavior
+            instructions = request.form.get('instructions', '').strip()
+
+            if not instructions:
+                flash('Instructions are required.', 'error')
+                return redirect(request.url)
+
+            recipe.instructions = instructions
+
+            # Clear any existing sections
+            for section in recipe.sections.all():
+                SectionIngredient.query.filter_by(section_id=section.id).delete()
+            RecipeSection.query.filter_by(recipe_id=recipe.id).delete()
+
+            # Handle ingredients
+            Ingredient.query.filter_by(recipe_id=recipe.id).delete()
+
+            ingredient_names = request.form.getlist('ingredient_name[]')
+            ingredient_quantities = request.form.getlist('ingredient_quantity[]')
+            ingredient_units = request.form.getlist('ingredient_unit[]')
+            ingredient_preps = request.form.getlist('ingredient_preparation[]')
+            ingredient_optionals = request.form.getlist('ingredient_optional[]')
+
+            for i, name in enumerate(ingredient_names):
+                if not name.strip():
+                    continue
+
+                quantity_str = ingredient_quantities[i] if i < len(ingredient_quantities) else ''
+                quantity = parse_quantity(quantity_str) if quantity_str.strip() else None
+
+                ingredient = Ingredient(
+                    recipe=recipe,
+                    name=name.strip(),
+                    quantity=quantity,
+                    unit=ingredient_units[i].strip() if i < len(ingredient_units) else None,
+                    preparation=ingredient_preps[i].strip() if i < len(ingredient_preps) else None,
+                    is_optional=str(i) in ingredient_optionals,
+                    sort_order=i
+                )
+                db.session.add(ingredient)
 
         db.session.commit()
         flash(f'Recipe "{recipe.title}" has been saved.', 'success')
@@ -190,6 +242,46 @@ def save_recipe(recipe):
         db.session.rollback()
         flash(f'Error saving recipe: {str(e)}', 'error')
         return redirect(request.url)
+
+
+def parse_sections_from_form(form):
+    """Parse section data from nested form fields."""
+    sections = []
+    section_idx = 0
+
+    while True:
+        section_name = form.get(f'section[{section_idx}][name]')
+        if section_name is None:
+            break
+
+        section_instructions = form.get(f'section[{section_idx}][instructions]', '')
+
+        # Parse ingredients for this section
+        ingredients = []
+        ing_idx = 0
+        while True:
+            ing_name = form.get(f'section[{section_idx}][ingredient][{ing_idx}][name]')
+            if ing_name is None:
+                break
+            if ing_name.strip():
+                quantity_str = form.get(f'section[{section_idx}][ingredient][{ing_idx}][quantity]', '')
+                ingredients.append({
+                    'name': ing_name.strip(),
+                    'quantity': parse_quantity(quantity_str) if quantity_str.strip() else None,
+                    'unit': form.get(f'section[{section_idx}][ingredient][{ing_idx}][unit]', '').strip() or None,
+                    'preparation': form.get(f'section[{section_idx}][ingredient][{ing_idx}][preparation]', '').strip() or None,
+                    'is_optional': form.get(f'section[{section_idx}][ingredient][{ing_idx}][optional]') == 'true',
+                })
+            ing_idx += 1
+
+        sections.append({
+            'name': section_name.strip(),
+            'instructions': section_instructions.strip(),
+            'ingredients': ingredients
+        })
+        section_idx += 1
+
+    return sections
 
 
 def parse_quantity(value):
