@@ -1,11 +1,51 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify, session
 from io import StringIO, BytesIO
 import csv
+import json
+import os
+import tempfile
 from app import db
 from app.models import Recipe, Ingredient, Category, RecipeSection, SectionIngredient
 from app.services.csv_handler import parse_recipe_csv, create_csv_export
 
 bp = Blueprint('import_export', __name__)
+
+
+def get_preview_file_path():
+    """Get the path for storing preview data."""
+    # Use a session-specific temp file
+    session_id = session.get('_import_session_id')
+    if not session_id:
+        import uuid
+        session_id = str(uuid.uuid4())
+        session['_import_session_id'] = session_id
+
+    temp_dir = tempfile.gettempdir()
+    return os.path.join(temp_dir, f'cookbook_import_{session_id}.json')
+
+
+def save_preview_data(recipes, errors):
+    """Save preview data to a temp file."""
+    file_path = get_preview_file_path()
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump({'recipes': recipes, 'errors': errors}, f)
+
+
+def load_preview_data():
+    """Load preview data from temp file."""
+    file_path = get_preview_file_path()
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data.get('recipes', []), data.get('errors', [])
+    return [], []
+
+
+def clear_preview_data():
+    """Clear the preview temp file."""
+    file_path = get_preview_file_path()
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
 
 @bp.route('/')
@@ -69,10 +109,8 @@ def upload():
                 flash(error, 'error')
             return redirect(url_for('import_export.index'))
 
-        # Store in session for preview
-        from flask import session
-        session['import_preview'] = recipes
-        session['import_errors'] = errors
+        # Store in temp file for preview (session cookies have size limits)
+        save_preview_data(recipes, errors)
 
         return render_template(
             'import/preview.html',
@@ -88,9 +126,7 @@ def upload():
 @bp.route('/confirm', methods=['POST'])
 def confirm_import():
     """Confirm and process the import."""
-    from flask import session
-
-    recipes = session.get('import_preview', [])
+    recipes, errors = load_preview_data()
     if not recipes:
         flash('No recipes to import.', 'error')
         return redirect(url_for('import_export.index'))
@@ -170,9 +206,8 @@ def confirm_import():
 
         db.session.commit()
 
-        # Clear session
-        session.pop('import_preview', None)
-        session.pop('import_errors', None)
+        # Clear temp file
+        clear_preview_data()
 
         flash(f'Successfully imported {imported_count} recipes.', 'success')
         return redirect(url_for('recipes.index'))
