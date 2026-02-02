@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initFavoriteButtons();
     initKitchenMode();
     initIngredientForm();
+    initSectionForm();
     initUnitConversion();
 });
 
@@ -265,6 +266,255 @@ function formatQuantity(value) {
         return value.toString();
     }
     return value.toFixed(1).replace(/\.0$/, '');
+}
+
+/**
+ * Section Form - Dynamic adding/removing of recipe sections
+ */
+function initSectionForm() {
+    const hasSectionsToggle = document.getElementById('has-sections');
+    const simpleMode = document.getElementById('simple-mode');
+    const sectionsMode = document.getElementById('sections-mode');
+    const addSectionBtn = document.getElementById('add-section');
+    const sectionsContainer = document.getElementById('sections-container');
+
+    if (!hasSectionsToggle) return;
+
+    // Toggle between simple and sections mode
+    hasSectionsToggle.addEventListener('change', function() {
+        if (this.checked) {
+            if (simpleMode) simpleMode.style.display = 'none';
+            if (sectionsMode) sectionsMode.style.display = 'block';
+        } else {
+            if (simpleMode) simpleMode.style.display = 'block';
+            if (sectionsMode) sectionsMode.style.display = 'none';
+        }
+    });
+
+    // Add section button
+    if (addSectionBtn && sectionsContainer) {
+        addSectionBtn.addEventListener('click', function() {
+            addSection(sectionsContainer);
+        });
+    }
+
+    // Delegate events for section operations
+    if (sectionsContainer) {
+        sectionsContainer.addEventListener('click', function(e) {
+            // Remove section
+            if (e.target.closest('.btn-remove-section')) {
+                const card = e.target.closest('.section-card');
+                if (card && sectionsContainer.querySelectorAll('.section-card').length > 1) {
+                    card.remove();
+                    reindexSections(sectionsContainer);
+                }
+            }
+
+            // Add ingredient to section
+            if (e.target.closest('.add-section-ingredient')) {
+                const card = e.target.closest('.section-card');
+                const container = card.querySelector('.section-ingredients-container');
+                const sectionIndex = parseInt(card.dataset.sectionIndex);
+                addSectionIngredient(container, sectionIndex);
+            }
+
+            // Remove ingredient from section
+            if (e.target.closest('.btn-remove-section-ingredient')) {
+                const row = e.target.closest('.ingredient-row');
+                const container = row.closest('.section-ingredients-container');
+                if (container.querySelectorAll('.ingredient-row').length > 1) {
+                    row.remove();
+                    const card = container.closest('.section-card');
+                    const sectionIndex = parseInt(card.dataset.sectionIndex);
+                    reindexSectionIngredients(container, sectionIndex);
+                }
+            }
+        });
+    }
+}
+
+function addSection(container) {
+    const index = container.querySelectorAll('.section-card').length;
+
+    const card = document.createElement('div');
+    card.className = 'card mb-4 section-card';
+    card.dataset.sectionIndex = index;
+    card.innerHTML = `
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <input type="text" class="form-control form-control-lg section-name-input"
+                   name="section[${index}][name]"
+                   placeholder="Section Name (e.g., Shell, Filling)">
+            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-section ms-2" title="Remove Section">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        <div class="card-body">
+            <h6 class="d-flex justify-content-between align-items-center">
+                Ingredients
+                <button type="button" class="btn btn-success btn-sm add-section-ingredient">
+                    <i class="bi bi-plus-lg me-1"></i>Add
+                </button>
+            </h6>
+            <div class="mb-2 text-muted small">
+                <div class="row">
+                    <div class="col-2">Qty</div>
+                    <div class="col-2">Unit</div>
+                    <div class="col-3">Ingredient</div>
+                    <div class="col-2">Prep</div>
+                    <div class="col-1">Opt?</div>
+                    <div class="col-2"></div>
+                </div>
+            </div>
+            <div class="section-ingredients-container">
+                <div class="ingredient-row">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-2">
+                            <input type="text" class="form-control form-control-sm"
+                                   name="section[${index}][ingredient][0][quantity]" placeholder="Qty">
+                        </div>
+                        <div class="col-2">
+                            <select class="form-select form-select-sm" name="section[${index}][ingredient][0][unit]">
+                                <option value="">Unit</option>
+                                <option value="cup">cup</option>
+                                <option value="cups">cups</option>
+                                <option value="tbsp">tbsp</option>
+                                <option value="tsp">tsp</option>
+                                <option value="oz">oz</option>
+                                <option value="lb">lb</option>
+                                <option value="g">g</option>
+                                <option value="ml">ml</option>
+                                <option value="piece">piece</option>
+                                <option value="clove">clove</option>
+                                <option value="can">can</option>
+                                <option value="pkg">pkg</option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <input type="text" class="form-control form-control-sm"
+                                   name="section[${index}][ingredient][0][name]" placeholder="Ingredient">
+                        </div>
+                        <div class="col-2">
+                            <input type="text" class="form-control form-control-sm"
+                                   name="section[${index}][ingredient][0][preparation]" placeholder="Prep">
+                        </div>
+                        <div class="col-1 text-center">
+                            <input type="checkbox" class="form-check-input"
+                                   name="section[${index}][ingredient][0][optional]" value="true" title="Optional">
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-sm btn-remove-section-ingredient" title="Remove">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="mt-4">Instructions <span class="text-danger">*</span></h6>
+            <textarea class="form-control" name="section[${index}][instructions]" rows="6"
+                      placeholder="Instructions for this section..."></textarea>
+        </div>
+    `;
+
+    container.appendChild(card);
+}
+
+function addSectionIngredient(container, sectionIndex) {
+    const ingredientIndex = container.querySelectorAll('.ingredient-row').length;
+
+    const row = document.createElement('div');
+    row.className = 'ingredient-row';
+    row.innerHTML = `
+        <div class="row g-2 align-items-center">
+            <div class="col-2">
+                <input type="text" class="form-control form-control-sm"
+                       name="section[${sectionIndex}][ingredient][${ingredientIndex}][quantity]" placeholder="Qty">
+            </div>
+            <div class="col-2">
+                <select class="form-select form-select-sm" name="section[${sectionIndex}][ingredient][${ingredientIndex}][unit]">
+                    <option value="">Unit</option>
+                    <option value="cup">cup</option>
+                    <option value="cups">cups</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="tsp">tsp</option>
+                    <option value="oz">oz</option>
+                    <option value="lb">lb</option>
+                    <option value="g">g</option>
+                    <option value="ml">ml</option>
+                    <option value="piece">piece</option>
+                    <option value="clove">clove</option>
+                    <option value="can">can</option>
+                    <option value="pkg">pkg</option>
+                </select>
+            </div>
+            <div class="col-3">
+                <input type="text" class="form-control form-control-sm"
+                       name="section[${sectionIndex}][ingredient][${ingredientIndex}][name]" placeholder="Ingredient">
+            </div>
+            <div class="col-2">
+                <input type="text" class="form-control form-control-sm"
+                       name="section[${sectionIndex}][ingredient][${ingredientIndex}][preparation]" placeholder="Prep">
+            </div>
+            <div class="col-1 text-center">
+                <input type="checkbox" class="form-check-input"
+                       name="section[${sectionIndex}][ingredient][${ingredientIndex}][optional]" value="true" title="Optional">
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-sm btn-remove-section-ingredient" title="Remove">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    container.appendChild(row);
+}
+
+function reindexSections(container) {
+    const cards = container.querySelectorAll('.section-card');
+    cards.forEach((card, sectionIndex) => {
+        card.dataset.sectionIndex = sectionIndex;
+
+        // Update section name input
+        const nameInput = card.querySelector('.section-name-input');
+        if (nameInput) {
+            nameInput.name = `section[${sectionIndex}][name]`;
+        }
+
+        // Update instructions textarea
+        const instructionsTextarea = card.querySelector('textarea[name*="[instructions]"]');
+        if (instructionsTextarea) {
+            instructionsTextarea.name = `section[${sectionIndex}][instructions]`;
+        }
+
+        // Re-index ingredients within this section
+        const ingredientsContainer = card.querySelector('.section-ingredients-container');
+        if (ingredientsContainer) {
+            reindexSectionIngredients(ingredientsContainer, sectionIndex);
+        }
+    });
+}
+
+function reindexSectionIngredients(container, sectionIndex) {
+    const rows = container.querySelectorAll('.ingredient-row');
+    rows.forEach((row, ingredientIndex) => {
+        // Update all input/select names in this row
+        const inputs = row.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            const name = input.name;
+            if (name.includes('[quantity]')) {
+                input.name = `section[${sectionIndex}][ingredient][${ingredientIndex}][quantity]`;
+            } else if (name.includes('[unit]')) {
+                input.name = `section[${sectionIndex}][ingredient][${ingredientIndex}][unit]`;
+            } else if (name.includes('[name]')) {
+                input.name = `section[${sectionIndex}][ingredient][${ingredientIndex}][name]`;
+            } else if (name.includes('[preparation]')) {
+                input.name = `section[${sectionIndex}][ingredient][${ingredientIndex}][preparation]`;
+            } else if (name.includes('[optional]')) {
+                input.name = `section[${sectionIndex}][ingredient][${ingredientIndex}][optional]`;
+            }
+        });
+    });
 }
 
 /**

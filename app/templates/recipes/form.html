@@ -90,56 +90,120 @@
                 </div>
             </div>
 
+            <!-- Recipe Structure Toggle -->
             <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Ingredients</h5>
-                    <button type="button" class="btn btn-success btn-sm" id="add-ingredient">
-                        <i class="bi bi-plus-lg me-1"></i>Add Ingredient
-                    </button>
+                <div class="card-header">
+                    <h5 class="mb-0">Recipe Structure</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-2 text-muted small">
-                        <div class="row">
-                            <div class="col-2">Quantity</div>
-                            <div class="col-2">Unit</div>
-                            <div class="col-4">Ingredient</div>
-                            <div class="col-2">Preparation</div>
-                            <div class="col-1">Opt?</div>
-                            <div class="col-1"></div>
-                        </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="has-sections" name="has_sections" value="true"
+                               {% if recipe and recipe.has_sections %}checked{% endif %}>
+                        <label class="form-check-label" for="has-sections">
+                            This recipe has multiple sections (e.g., "Shell" and "Filling" for a cannoli)
+                        </label>
                     </div>
-                    <div id="ingredients-container">
-                        {% if recipe and recipe.ingredients.count() > 0 %}
-                            {% for ing in recipe.ingredients %}
+                    <small class="text-muted">Enable this for complex recipes where ingredients and instructions are organized into separate parts.</small>
+                </div>
+            </div>
+
+            <!-- Simple Mode (no sections) -->
+            <div id="simple-mode" {% if recipe and recipe.has_sections %}style="display:none"{% endif %}>
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Ingredients</h5>
+                        <button type="button" class="btn btn-success btn-sm" id="add-ingredient">
+                            <i class="bi bi-plus-lg me-1"></i>Add Ingredient
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2 text-muted small">
+                            <div class="row">
+                                <div class="col-2">Quantity</div>
+                                <div class="col-2">Unit</div>
+                                <div class="col-4">Ingredient</div>
+                                <div class="col-2">Preparation</div>
+                                <div class="col-1">Opt?</div>
+                                <div class="col-1"></div>
+                            </div>
+                        </div>
+                        <div id="ingredients-container">
+                            {% if recipe and not recipe.has_sections and recipe.ingredients.count() > 0 %}
+                                {% for ing in recipe.ingredients %}
+                                    <div class="ingredient-row">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                       name="ingredient_quantity[]" placeholder="Qty"
+                                                       value="{{ ing.quantity if ing.quantity else '' }}">
+                                            </div>
+                                            <div class="col-2">
+                                                <select class="form-select form-select-sm" name="ingredient_unit[]">
+                                                    <option value="">Unit</option>
+                                                    {% for unit in ['cup', 'cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'ml', 'piece', 'clove', 'can', 'pkg'] %}
+                                                        <option value="{{ unit }}" {% if ing.unit == unit %}selected{% endif %}>{{ unit }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <input type="text" class="form-control form-control-sm"
+                                                       name="ingredient_name[]" placeholder="Ingredient name"
+                                                       value="{{ ing.name }}">
+                                            </div>
+                                            <div class="col-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                       name="ingredient_preparation[]" placeholder="Prep"
+                                                       value="{{ ing.preparation if ing.preparation else '' }}">
+                                            </div>
+                                            <div class="col-1 text-center">
+                                                <input type="checkbox" class="form-check-input"
+                                                       name="ingredient_optional[]" value="{{ loop.index0 }}"
+                                                       {% if ing.is_optional %}checked{% endif %} title="Optional">
+                                            </div>
+                                            <div class="col-1">
+                                                <button type="button" class="btn btn-sm btn-remove-ingredient" title="Remove">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Default empty ingredient row -->
                                 <div class="ingredient-row">
                                     <div class="row g-2 align-items-center">
                                         <div class="col-2">
                                             <input type="text" class="form-control form-control-sm"
-                                                   name="ingredient_quantity[]" placeholder="Qty"
-                                                   value="{{ ing.quantity if ing.quantity else '' }}">
+                                                   name="ingredient_quantity[]" placeholder="Qty">
                                         </div>
                                         <div class="col-2">
                                             <select class="form-select form-select-sm" name="ingredient_unit[]">
                                                 <option value="">Unit</option>
-                                                {% for unit in ['cup', 'cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'ml', 'piece', 'clove', 'can', 'pkg'] %}
-                                                    <option value="{{ unit }}" {% if ing.unit == unit %}selected{% endif %}>{{ unit }}</option>
-                                                {% endfor %}
+                                                <option value="cup">cup</option>
+                                                <option value="cups">cups</option>
+                                                <option value="tbsp">tbsp</option>
+                                                <option value="tsp">tsp</option>
+                                                <option value="oz">oz</option>
+                                                <option value="lb">lb</option>
+                                                <option value="g">g</option>
+                                                <option value="ml">ml</option>
+                                                <option value="piece">piece</option>
+                                                <option value="clove">clove</option>
+                                                <option value="can">can</option>
+                                                <option value="pkg">pkg</option>
                                             </select>
                                         </div>
                                         <div class="col-4">
                                             <input type="text" class="form-control form-control-sm"
-                                                   name="ingredient_name[]" placeholder="Ingredient name" required
-                                                   value="{{ ing.name }}">
+                                                   name="ingredient_name[]" placeholder="Ingredient name">
                                         </div>
                                         <div class="col-2">
                                             <input type="text" class="form-control form-control-sm"
-                                                   name="ingredient_preparation[]" placeholder="Prep"
-                                                   value="{{ ing.preparation if ing.preparation else '' }}">
+                                                   name="ingredient_preparation[]" placeholder="Prep">
                                         </div>
                                         <div class="col-1 text-center">
                                             <input type="checkbox" class="form-check-input"
-                                                   name="ingredient_optional[]" value="{{ loop.index0 }}"
-                                                   {% if ing.is_optional %}checked{% endif %} title="Optional">
+                                                   name="ingredient_optional[]" value="0" title="Optional">
                                         </div>
                                         <div class="col-1">
                                             <button type="button" class="btn btn-sm btn-remove-ingredient" title="Remove">
@@ -148,70 +212,192 @@
                                         </div>
                                     </div>
                                 </div>
-                            {% endfor %}
-                        {% else %}
-                            <!-- Default empty ingredient row -->
-                            <div class="ingredient-row">
-                                <div class="row g-2 align-items-center">
-                                    <div class="col-2">
-                                        <input type="text" class="form-control form-control-sm"
-                                               name="ingredient_quantity[]" placeholder="Qty">
-                                    </div>
-                                    <div class="col-2">
-                                        <select class="form-select form-select-sm" name="ingredient_unit[]">
-                                            <option value="">Unit</option>
-                                            <option value="cup">cup</option>
-                                            <option value="cups">cups</option>
-                                            <option value="tbsp">tbsp</option>
-                                            <option value="tsp">tsp</option>
-                                            <option value="oz">oz</option>
-                                            <option value="lb">lb</option>
-                                            <option value="g">g</option>
-                                            <option value="ml">ml</option>
-                                            <option value="piece">piece</option>
-                                            <option value="clove">clove</option>
-                                            <option value="can">can</option>
-                                            <option value="pkg">pkg</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <input type="text" class="form-control form-control-sm"
-                                               name="ingredient_name[]" placeholder="Ingredient name" required>
-                                    </div>
-                                    <div class="col-2">
-                                        <input type="text" class="form-control form-control-sm"
-                                               name="ingredient_preparation[]" placeholder="Prep">
-                                    </div>
-                                    <div class="col-1 text-center">
-                                        <input type="checkbox" class="form-check-input"
-                                               name="ingredient_optional[]" value="0" title="Optional">
-                                    </div>
-                                    <div class="col-1">
-                                        <button type="button" class="btn btn-sm btn-remove-ingredient" title="Remove">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Instructions <span class="text-danger">*</span></h5>
-                </div>
-                <div class="card-body">
-                    <textarea class="form-control" id="instructions" name="instructions" rows="10" required
-                              placeholder="Enter each step on a new line:
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Instructions <span class="text-danger">*</span></h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control" id="instructions" name="instructions" rows="10"
+                                  placeholder="Enter each step on a new line:
 
 1. Preheat oven to 350°F.
 2. Mix dry ingredients in a bowl.
 3. Add wet ingredients and stir until combined.
-...">{{ recipe.instructions if recipe else '' }}</textarea>
-                    <small class="text-muted">Enter each step on a new line. Steps will be automatically numbered.</small>
+...">{{ recipe.instructions if recipe and not recipe.has_sections else '' }}</textarea>
+                        <small class="text-muted">Enter each step on a new line. Steps will be automatically numbered.</small>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Sections Mode -->
+            <div id="sections-mode" {% if not recipe or not recipe.has_sections %}style="display:none"{% endif %}>
+                <div id="sections-container">
+                    {% if recipe and recipe.has_sections %}
+                        {% for section in recipe.sections %}
+                            {% set section_idx = loop.index0 %}
+                            <div class="card mb-4 section-card" data-section-index="{{ section_idx }}">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <input type="text" class="form-control form-control-lg section-name-input"
+                                           name="section[{{ section_idx }}][name]"
+                                           placeholder="Section Name (e.g., Shell, Filling)"
+                                           value="{{ section.name }}">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove-section ms-2" title="Remove Section">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="d-flex justify-content-between align-items-center">
+                                        Ingredients
+                                        <button type="button" class="btn btn-success btn-sm add-section-ingredient">
+                                            <i class="bi bi-plus-lg me-1"></i>Add
+                                        </button>
+                                    </h6>
+                                    <div class="mb-2 text-muted small">
+                                        <div class="row">
+                                            <div class="col-2">Qty</div>
+                                            <div class="col-2">Unit</div>
+                                            <div class="col-3">Ingredient</div>
+                                            <div class="col-2">Prep</div>
+                                            <div class="col-1">Opt?</div>
+                                            <div class="col-2"></div>
+                                        </div>
+                                    </div>
+                                    <div class="section-ingredients-container">
+                                        {% for ing in section.ingredients %}
+                                            <div class="ingredient-row">
+                                                <div class="row g-2 align-items-center">
+                                                    <div class="col-2">
+                                                        <input type="text" class="form-control form-control-sm"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][quantity]"
+                                                               placeholder="Qty" value="{{ ing.quantity if ing.quantity else '' }}">
+                                                    </div>
+                                                    <div class="col-2">
+                                                        <select class="form-select form-select-sm" name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][unit]">
+                                                            <option value="">Unit</option>
+                                                            {% for unit in ['cup', 'cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'ml', 'piece', 'clove', 'can', 'pkg'] %}
+                                                                <option value="{{ unit }}" {% if ing.unit == unit %}selected{% endif %}>{{ unit }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <input type="text" class="form-control form-control-sm"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][name]"
+                                                               placeholder="Ingredient" value="{{ ing.name }}">
+                                                    </div>
+                                                    <div class="col-2">
+                                                        <input type="text" class="form-control form-control-sm"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][preparation]"
+                                                               placeholder="Prep" value="{{ ing.preparation if ing.preparation else '' }}">
+                                                    </div>
+                                                    <div class="col-1 text-center">
+                                                        <input type="checkbox" class="form-check-input"
+                                                               name="section[{{ section_idx }}][ingredient][{{ loop.index0 }}][optional]"
+                                                               value="true" {% if ing.is_optional %}checked{% endif %} title="Optional">
+                                                    </div>
+                                                    <div class="col-2">
+                                                        <button type="button" class="btn btn-sm btn-remove-section-ingredient" title="Remove">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <h6 class="mt-4">Instructions <span class="text-danger">*</span></h6>
+                                    <textarea class="form-control" name="section[{{ section_idx }}][instructions]" rows="6"
+                                              placeholder="Instructions for this section...">{{ section.instructions }}</textarea>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Default empty section -->
+                        <div class="card mb-4 section-card" data-section-index="0">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <input type="text" class="form-control form-control-lg section-name-input"
+                                       name="section[0][name]"
+                                       placeholder="Section Name (e.g., Shell, Filling)">
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-section ms-2" title="Remove Section">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="d-flex justify-content-between align-items-center">
+                                    Ingredients
+                                    <button type="button" class="btn btn-success btn-sm add-section-ingredient">
+                                        <i class="bi bi-plus-lg me-1"></i>Add
+                                    </button>
+                                </h6>
+                                <div class="mb-2 text-muted small">
+                                    <div class="row">
+                                        <div class="col-2">Qty</div>
+                                        <div class="col-2">Unit</div>
+                                        <div class="col-3">Ingredient</div>
+                                        <div class="col-2">Prep</div>
+                                        <div class="col-1">Opt?</div>
+                                        <div class="col-2"></div>
+                                    </div>
+                                </div>
+                                <div class="section-ingredients-container">
+                                    <div class="ingredient-row">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                       name="section[0][ingredient][0][quantity]" placeholder="Qty">
+                                            </div>
+                                            <div class="col-2">
+                                                <select class="form-select form-select-sm" name="section[0][ingredient][0][unit]">
+                                                    <option value="">Unit</option>
+                                                    <option value="cup">cup</option>
+                                                    <option value="cups">cups</option>
+                                                    <option value="tbsp">tbsp</option>
+                                                    <option value="tsp">tsp</option>
+                                                    <option value="oz">oz</option>
+                                                    <option value="lb">lb</option>
+                                                    <option value="g">g</option>
+                                                    <option value="ml">ml</option>
+                                                    <option value="piece">piece</option>
+                                                    <option value="clove">clove</option>
+                                                    <option value="can">can</option>
+                                                    <option value="pkg">pkg</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-3">
+                                                <input type="text" class="form-control form-control-sm"
+                                                       name="section[0][ingredient][0][name]" placeholder="Ingredient">
+                                            </div>
+                                            <div class="col-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                       name="section[0][ingredient][0][preparation]" placeholder="Prep">
+                                            </div>
+                                            <div class="col-1 text-center">
+                                                <input type="checkbox" class="form-check-input"
+                                                       name="section[0][ingredient][0][optional]" value="true" title="Optional">
+                                            </div>
+                                            <div class="col-2">
+                                                <button type="button" class="btn btn-sm btn-remove-section-ingredient" title="Remove">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="mt-4">Instructions <span class="text-danger">*</span></h6>
+                                <textarea class="form-control" name="section[0][instructions]" rows="6"
+                                          placeholder="Instructions for this section..."></textarea>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <button type="button" class="btn btn-outline-primary mb-4" id="add-section">
+                    <i class="bi bi-plus-lg me-1"></i>Add Section
+                </button>
             </div>
 
             <div class="card mb-4">

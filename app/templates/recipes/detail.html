@@ -88,56 +88,118 @@
 </div>
 
 <!-- Recipe Content -->
-<div class="row recipe-content">
-    <!-- Ingredients -->
-    <div class="col-md-4 ingredients-section">
-        <h2 class="h5 mb-3">
-            <i class="bi bi-list-check me-2"></i>Ingredients
+{% if recipe.has_sections %}
+    <!-- Sectioned Layout -->
+    {% for section in recipe.sections %}
+    <div class="recipe-section mb-4">
+        <h2 class="section-title">
+            <i class="bi bi-bookmark me-2"></i>{{ section.name }}
         </h2>
-        <ul class="ingredients-list">
-            {% for ingredient in recipe.ingredients %}
-                <li class="ingredient-item">
-                    <input type="checkbox" class="ingredient-checkbox no-print" id="ing-{{ ingredient.id }}">
-                    <label class="ingredient-text" for="ing-{{ ingredient.id }}">
-                        {% if ingredient.quantity %}
-                            <span class="ingredient-quantity"
-                                  data-original-qty="{{ ingredient.quantity }}"
-                                  data-original-unit="{{ ingredient.unit or '' }}">
-                                {{ ingredient.quantity }}
-                            </span>
-                        {% endif %}
-                        {% if ingredient.unit %}
-                            <span class="ingredient-unit">{{ ingredient.unit }}</span>
-                        {% endif %}
-                        <span class="ingredient-name">{{ ingredient.name }}</span>
-                        {% if ingredient.preparation %}
-                            <span class="ingredient-prep">, {{ ingredient.preparation }}</span>
-                        {% endif %}
-                        {% if ingredient.is_optional %}
-                            <span class="ingredient-optional">(optional)</span>
-                        {% endif %}
-                    </label>
-                </li>
-            {% else %}
-                <li class="text-muted">No ingredients listed.</li>
-            {% endfor %}
-        </ul>
-    </div>
+        <div class="row recipe-content">
+            <!-- Section Ingredients -->
+            <div class="col-md-4 ingredients-section">
+                <h3 class="h6 mb-3">
+                    <i class="bi bi-list-check me-2"></i>Ingredients
+                </h3>
+                <ul class="ingredients-list">
+                    {% for ingredient in section.ingredients %}
+                        <li class="ingredient-item">
+                            <input type="checkbox" class="ingredient-checkbox no-print" id="sec-{{ section.id }}-ing-{{ ingredient.id }}">
+                            <label class="ingredient-text" for="sec-{{ section.id }}-ing-{{ ingredient.id }}">
+                                {% if ingredient.quantity %}
+                                    <span class="ingredient-quantity"
+                                          data-original-qty="{{ ingredient.quantity }}"
+                                          data-original-unit="{{ ingredient.unit or '' }}">
+                                        {{ ingredient.quantity }}
+                                    </span>
+                                {% endif %}
+                                {% if ingredient.unit %}
+                                    <span class="ingredient-unit">{{ ingredient.unit }}</span>
+                                {% endif %}
+                                <span class="ingredient-name">{{ ingredient.name }}</span>
+                                {% if ingredient.preparation %}
+                                    <span class="ingredient-prep">, {{ ingredient.preparation }}</span>
+                                {% endif %}
+                                {% if ingredient.is_optional %}
+                                    <span class="ingredient-optional">(optional)</span>
+                                {% endif %}
+                            </label>
+                        </li>
+                    {% else %}
+                        <li class="text-muted">No ingredients listed.</li>
+                    {% endfor %}
+                </ul>
+            </div>
 
-    <!-- Instructions -->
-    <div class="col-md-8 instructions-section">
-        <h2 class="h5 mb-3">
-            <i class="bi bi-list-ol me-2"></i>Instructions
-        </h2>
-        <ol class="instructions-list">
-            {% for step in recipe.instructions.split('\n') %}
-                {% if step.strip() %}
-                    <li>{{ step.strip() }}</li>
-                {% endif %}
-            {% endfor %}
-        </ol>
+            <!-- Section Instructions -->
+            <div class="col-md-8 instructions-section">
+                <h3 class="h6 mb-3">
+                    <i class="bi bi-list-ol me-2"></i>Instructions
+                </h3>
+                <ol class="instructions-list">
+                    {% for step in section.instructions.split('\n') %}
+                        {% if step.strip() %}
+                            <li>{{ step.strip() }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
     </div>
-</div>
+    {% endfor %}
+{% else %}
+    <!-- Simple Layout (no sections) -->
+    <div class="row recipe-content">
+        <!-- Ingredients -->
+        <div class="col-md-4 ingredients-section">
+            <h2 class="h5 mb-3">
+                <i class="bi bi-list-check me-2"></i>Ingredients
+            </h2>
+            <ul class="ingredients-list">
+                {% for ingredient in recipe.ingredients %}
+                    <li class="ingredient-item">
+                        <input type="checkbox" class="ingredient-checkbox no-print" id="ing-{{ ingredient.id }}">
+                        <label class="ingredient-text" for="ing-{{ ingredient.id }}">
+                            {% if ingredient.quantity %}
+                                <span class="ingredient-quantity"
+                                      data-original-qty="{{ ingredient.quantity }}"
+                                      data-original-unit="{{ ingredient.unit or '' }}">
+                                    {{ ingredient.quantity }}
+                                </span>
+                            {% endif %}
+                            {% if ingredient.unit %}
+                                <span class="ingredient-unit">{{ ingredient.unit }}</span>
+                            {% endif %}
+                            <span class="ingredient-name">{{ ingredient.name }}</span>
+                            {% if ingredient.preparation %}
+                                <span class="ingredient-prep">, {{ ingredient.preparation }}</span>
+                            {% endif %}
+                            {% if ingredient.is_optional %}
+                                <span class="ingredient-optional">(optional)</span>
+                            {% endif %}
+                        </label>
+                    </li>
+                {% else %}
+                    <li class="text-muted">No ingredients listed.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Instructions -->
+        <div class="col-md-8 instructions-section">
+            <h2 class="h5 mb-3">
+                <i class="bi bi-list-ol me-2"></i>Instructions
+            </h2>
+            <ol class="instructions-list">
+                {% for step in recipe.instructions.split('\n') %}
+                    {% if step.strip() %}
+                        <li>{{ step.strip() }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+{% endif %}
 
 <!-- Notes -->
 {% if recipe.notes %}

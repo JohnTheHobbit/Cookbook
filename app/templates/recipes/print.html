@@ -101,6 +101,25 @@
             color: #999;
         }
 
+        /* Section styles */
+        .recipe-section {
+            margin-bottom: 0.3in;
+            padding-bottom: 0.2in;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .recipe-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 14pt;
+            color: #2c7be5;
+            margin-bottom: 0.15in;
+            padding-bottom: 0.05in;
+            border-bottom: 1px solid #2c7be5;
+        }
+
         .no-print {
             margin-top: 0.5in;
             text-align: center;
@@ -155,33 +174,70 @@
         {% endif %}
     </div>
 
-    <div class="content">
-        <div class="ingredients">
-            <h2>Ingredients</h2>
-            <ul>
-                {% for ing in recipe.ingredients %}
-                    <li>
-                        {% if ing.quantity %}{{ ing.quantity }}{% endif %}
-                        {% if ing.unit %}{{ ing.unit }}{% endif %}
-                        {{ ing.name }}
-                        {% if ing.preparation %}, {{ ing.preparation }}{% endif %}
-                        {% if ing.is_optional %}(optional){% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
+    {% if recipe.has_sections %}
+        <!-- Sectioned Layout -->
+        {% for section in recipe.sections %}
+        <div class="recipe-section">
+            <h2 class="section-title">{{ section.name }}</h2>
+            <div class="content">
+                <div class="ingredients">
+                    <h2>Ingredients</h2>
+                    <ul>
+                        {% for ing in section.ingredients %}
+                            <li>
+                                {% if ing.quantity %}{{ ing.quantity }}{% endif %}
+                                {% if ing.unit %}{{ ing.unit }}{% endif %}
+                                {{ ing.name }}
+                                {% if ing.preparation %}, {{ ing.preparation }}{% endif %}
+                                {% if ing.is_optional %}(optional){% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
 
-        <div class="instructions">
-            <h2>Instructions</h2>
-            <ol>
-                {% for step in recipe.instructions.split('\n') %}
-                    {% if step.strip() %}
-                        <li>{{ step.strip() }}</li>
-                    {% endif %}
-                {% endfor %}
-            </ol>
+                <div class="instructions">
+                    <h2>Instructions</h2>
+                    <ol>
+                        {% for step in section.instructions.split('\n') %}
+                            {% if step.strip() %}
+                                <li>{{ step.strip() }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
         </div>
-    </div>
+        {% endfor %}
+    {% else %}
+        <!-- Simple Layout -->
+        <div class="content">
+            <div class="ingredients">
+                <h2>Ingredients</h2>
+                <ul>
+                    {% for ing in recipe.ingredients %}
+                        <li>
+                            {% if ing.quantity %}{{ ing.quantity }}{% endif %}
+                            {% if ing.unit %}{{ ing.unit }}{% endif %}
+                            {{ ing.name }}
+                            {% if ing.preparation %}, {{ ing.preparation }}{% endif %}
+                            {% if ing.is_optional %}(optional){% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="instructions">
+                <h2>Instructions</h2>
+                <ol>
+                    {% for step in recipe.instructions.split('\n') %}
+                        {% if step.strip() %}
+                            <li>{{ step.strip() }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    {% endif %}
 
     {% if recipe.notes %}
         <div class="notes">
