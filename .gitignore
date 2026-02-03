@@ -33,6 +33,8 @@ ENV/
 *.swp
 *.swo
 *~
+.claude
+.gitignore
 
 # Testing
 .pytest_cache/
