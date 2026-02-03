@@ -14,6 +14,7 @@ A self-hosted recipe management application for your home network. Built with Fl
 - **Favorite recipes** for quick access
 - **US/Metric conversion** toggle on recipe view
 - **Print-friendly** layout for recipes
+- **Download PDF** - export recipes as PDF files
 - **Kitchen mode** - keeps screen on with larger text
 - **Mobile responsive** design
 
@@ -147,6 +148,7 @@ Download the template from the Import page or use this format:
 | description | No | Short description |
 | prep_time_minutes | No | Prep time in minutes |
 | cook_time_minutes | No | Cook time in minutes |
+| rest_time_minutes | No | Rest/inactive time (rising, chilling, marinating) |
 | servings | No | Number of servings |
 | servings_unit | No | e.g., "servings", "pieces" |
 | ingredients | No | Pipe-separated: `2 cups flour\|1 tsp salt` |
@@ -214,6 +216,7 @@ cookbook/
 - **Backend:** Python 3.11, Flask
 - **Database:** SQLite with SQLAlchemy ORM
 - **Frontend:** Bootstrap 5, htmx, Quill Editor
+- **PDF Generation:** WeasyPrint
 - **Security:** Bleach for HTML sanitization
 - **Deployment:** Docker, Gunicorn, Kubernetes/K3S
 
