@@ -57,8 +57,8 @@ def index():
 @bp.route('/template')
 def download_template():
     """Download CSV template."""
-    template_content = """title,category,description,prep_time_minutes,cook_time_minutes,servings,servings_unit,ingredients,instructions,notes,source
-"Chocolate Chip Cookies","Desserts","Classic homemade chocolate chip cookies",15,12,24,cookies,"2 cups all-purpose flour|1 cup butter, softened|3/4 cup granulated sugar|3/4 cup brown sugar, packed|2 large eggs|1 tsp vanilla extract|1 tsp baking soda|1/2 tsp salt|2 cups chocolate chips","1. Preheat oven to 375°F (190°C).
+    template_content = """title,category,description,prep_time_minutes,cook_time_minutes,rest_time_minutes,servings,servings_unit,ingredients,instructions,notes,source
+"Chocolate Chip Cookies","Desserts","Classic homemade chocolate chip cookies",15,12,30,24,cookies,"2 cups all-purpose flour|1 cup butter, softened|3/4 cup granulated sugar|3/4 cup brown sugar, packed|2 large eggs|1 tsp vanilla extract|1 tsp baking soda|1/2 tsp salt|2 cups chocolate chips","1. Preheat oven to 375°F (190°C).
 2. In a large bowl, cream together butter and sugars until fluffy.
 3. Beat in eggs one at a time, then add vanilla.
 4. In a separate bowl, whisk flour, baking soda, and salt.
@@ -67,7 +67,7 @@ def download_template():
 7. Drop rounded tablespoons onto ungreased baking sheets.
 8. Bake 9-11 minutes or until golden brown.
 9. Cool on baking sheet for 2 minutes before transferring to wire rack.","Let dough chill for 30 minutes for thicker cookies.","Family recipe"
-"Simple Garden Salad","Soups & Salads","Fresh and simple side salad",10,0,4,servings,"1 head romaine lettuce, chopped|1 cup cherry tomatoes, halved|1 cucumber, sliced|1/4 red onion, thinly sliced|1/4 cup olive oil|2 tbsp red wine vinegar|salt and pepper to taste","1. Wash and dry all vegetables.
+"Simple Garden Salad","Soups & Salads","Fresh and simple side salad",10,0,,4,servings,"1 head romaine lettuce, chopped|1 cup cherry tomatoes, halved|1 cucumber, sliced|1/4 red onion, thinly sliced|1/4 cup olive oil|2 tbsp red wine vinegar|salt and pepper to taste","1. Wash and dry all vegetables.
 2. Combine lettuce, tomatoes, cucumber, and onion in a large bowl.
 3. Whisk together olive oil and vinegar.
 4. Drizzle dressing over salad just before serving.
@@ -155,6 +155,7 @@ def confirm_import():
                 category_id=category.id if category else None,
                 prep_time_minutes=recipe_data.get('prep_time_minutes'),
                 cook_time_minutes=recipe_data.get('cook_time_minutes'),
+                rest_time_minutes=recipe_data.get('rest_time_minutes'),
                 servings=recipe_data.get('servings'),
                 servings_unit=recipe_data.get('servings_unit', 'servings'),
                 instructions=recipe_data.get('instructions') if not has_sections else None,

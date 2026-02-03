@@ -247,6 +247,9 @@
         {% if recipe.cook_time_minutes %}
             <span>Cook: {{ recipe.cook_time_minutes }} min</span>
         {% endif %}
+        {% if recipe.rest_time_minutes %}
+            <span>Rest: {{ recipe.rest_time_minutes }} min</span>
+        {% endif %}
         {% if recipe.servings %}
             <span>Serves: {{ recipe.servings }} {{ recipe.servings_unit }}</span>
         {% endif %}

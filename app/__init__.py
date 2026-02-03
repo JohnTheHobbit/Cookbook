@@ -35,6 +35,8 @@ def create_app(config_name=None):
     # Create database tables
     with app.app_context():
         db.create_all()
+        # Ensure schema is up to date (add any missing columns)
+        ensure_schema_updated()
         # Seed default categories if empty
         from app.models.category import Category
         if Category.query.count() == 0:
@@ -46,6 +48,26 @@ def create_app(config_name=None):
         return {'status': 'healthy'}
 
     return app
+
+
+def ensure_schema_updated():
+    """Add any missing columns to existing tables (auto-migration)."""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(db.engine)
+
+    # Check if recipes table exists
+    if 'recipes' not in inspector.get_table_names():
+        return
+
+    # Get existing columns
+    columns = [col['name'] for col in inspector.get_columns('recipes')]
+
+    # Add rest_time_minutes if missing
+    if 'rest_time_minutes' not in columns:
+        with db.engine.connect() as conn:
+            conn.execute(text('ALTER TABLE recipes ADD COLUMN rest_time_minutes INTEGER'))
+            conn.commit()
 
 
 def seed_categories():

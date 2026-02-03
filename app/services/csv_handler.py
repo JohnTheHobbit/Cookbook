@@ -46,6 +46,7 @@ def parse_recipe_csv(content: str) -> tuple[list[dict], list[str]]:
                     'description': row.get('description', '').strip() or None,
                     'prep_time_minutes': parse_int(row.get('prep_time_minutes', '')),
                     'cook_time_minutes': parse_int(row.get('cook_time_minutes', '')),
+                    'rest_time_minutes': parse_int(row.get('rest_time_minutes', '')),
                     'servings': parse_int(row.get('servings', '')),
                     'servings_unit': row.get('servings_unit', 'servings').strip() or 'servings',
                     'has_sections': True,
@@ -67,6 +68,7 @@ def parse_recipe_csv(content: str) -> tuple[list[dict], list[str]]:
                     'description': row.get('description', '').strip() or None,
                     'prep_time_minutes': parse_int(row.get('prep_time_minutes', '')),
                     'cook_time_minutes': parse_int(row.get('cook_time_minutes', '')),
+                    'rest_time_minutes': parse_int(row.get('rest_time_minutes', '')),
                     'servings': parse_int(row.get('servings', '')),
                     'servings_unit': row.get('servings_unit', 'servings').strip() or 'servings',
                     'has_sections': False,
@@ -328,7 +330,7 @@ def create_csv_export(recipes) -> str:
     output = StringIO()
     fieldnames = [
         'title', 'category', 'description', 'prep_time_minutes', 'cook_time_minutes',
-        'servings', 'servings_unit', 'ingredients', 'instructions', 'notes', 'source'
+        'rest_time_minutes', 'servings', 'servings_unit', 'ingredients', 'instructions', 'notes', 'source'
     ]
 
     writer = csv.DictWriter(output, fieldnames=fieldnames)
@@ -364,6 +366,7 @@ def create_csv_export(recipes) -> str:
             'description': recipe.description or '',
             'prep_time_minutes': recipe.prep_time_minutes or '',
             'cook_time_minutes': recipe.cook_time_minutes or '',
+            'rest_time_minutes': recipe.rest_time_minutes or '',
             'servings': recipe.servings or '',
             'servings_unit': recipe.servings_unit or 'servings',
             'ingredients': ingredients_str,

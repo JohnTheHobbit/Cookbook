@@ -143,6 +143,7 @@ def save_recipe(recipe):
         category_id = request.form.get('category_id', type=int)
         prep_time = request.form.get('prep_time_minutes', type=int)
         cook_time = request.form.get('cook_time_minutes', type=int)
+        rest_time = request.form.get('rest_time_minutes', type=int)
         servings = request.form.get('servings', type=int)
         servings_unit = request.form.get('servings_unit', 'servings').strip()
         notes = sanitize_html(request.form.get('notes', ''))
@@ -161,6 +162,7 @@ def save_recipe(recipe):
         recipe.category_id = category_id if category_id else None
         recipe.prep_time_minutes = prep_time
         recipe.cook_time_minutes = cook_time
+        recipe.rest_time_minutes = rest_time
         recipe.servings = servings
         recipe.servings_unit = servings_unit
         recipe.notes = notes or None

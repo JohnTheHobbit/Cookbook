@@ -12,6 +12,7 @@ class Recipe(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     prep_time_minutes = db.Column(db.Integer)
     cook_time_minutes = db.Column(db.Integer)
+    rest_time_minutes = db.Column(db.Integer)
     servings = db.Column(db.Integer)
     servings_unit = db.Column(db.String(50), default='servings')
     instructions = db.Column(db.Text, nullable=True)  # Nullable for sectioned recipes
@@ -50,14 +51,27 @@ class Recipe(db.Model):
 
     @property
     def formatted_total_time(self):
-        """Return formatted total time string."""
+        """Return formatted total time string with rest time in parentheses."""
         total = self.total_time_minutes
-        if total == 0:
+        rest = self.rest_time_minutes or 0
+
+        if total == 0 and rest == 0:
             return None
-        hours, minutes = divmod(total, 60)
-        if hours > 0:
-            return f'{hours}h {minutes}m' if minutes > 0 else f'{hours}h'
-        return f'{minutes}m'
+
+        def format_time(mins):
+            hours, minutes = divmod(mins, 60)
+            if hours > 0:
+                return f'{hours}h {minutes}m' if minutes > 0 else f'{hours}h'
+            return f'{minutes}m'
+
+        result = format_time(total) if total > 0 else ''
+        if rest > 0:
+            rest_str = format_time(rest)
+            if result:
+                result += f' (+{rest_str} rest)'
+            else:
+                result = f'{rest_str} rest'
+        return result
 
     def to_dict(self, include_ingredients=True):
         """Convert to dictionary."""
@@ -69,6 +83,7 @@ class Recipe(db.Model):
             'category_name': self.category.name if self.category else None,
             'prep_time_minutes': self.prep_time_minutes,
             'cook_time_minutes': self.cook_time_minutes,
+            'rest_time_minutes': self.rest_time_minutes,
             'total_time_minutes': self.total_time_minutes,
             'servings': self.servings,
             'servings_unit': self.servings_unit,
