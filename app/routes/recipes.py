@@ -1,8 +1,24 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+import bleach
 from app import db
 from app.models import Recipe, Ingredient, Category, RecipeSection, SectionIngredient
 
 bp = Blueprint('recipes', __name__)
+
+# HTML sanitization for notes field
+ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a']
+ALLOWED_ATTRS = {'a': ['href', 'target', 'rel']}
+
+
+def sanitize_html(html):
+    """Sanitize HTML content to prevent XSS attacks."""
+    if not html:
+        return None
+    cleaned = bleach.clean(html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
+    # Remove empty paragraphs (Quill creates these for empty content)
+    if cleaned in ('<p><br></p>', '<p></p>', ''):
+        return None
+    return cleaned
 
 
 @bp.route('/')
@@ -129,7 +145,7 @@ def save_recipe(recipe):
         cook_time = request.form.get('cook_time_minutes', type=int)
         servings = request.form.get('servings', type=int)
         servings_unit = request.form.get('servings_unit', 'servings').strip()
-        notes = request.form.get('notes', '').strip()
+        notes = sanitize_html(request.form.get('notes', ''))
         source = request.form.get('source', '').strip()
 
         # Check if using sections mode

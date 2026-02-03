@@ -405,8 +405,8 @@
                     <h5 class="mb-0">Notes</h5>
                 </div>
                 <div class="card-body">
-                    <textarea class="form-control" id="notes" name="notes" rows="3"
-                              placeholder="Any additional tips, variations, or personal notes...">{{ recipe.notes if recipe else '' }}</textarea>
+                    <div id="notes-editor"></div>
+                    <input type="hidden" id="notes" name="notes" value="{{ recipe.notes|e if recipe and recipe.notes else '' }}">
                 </div>
             </div>
 

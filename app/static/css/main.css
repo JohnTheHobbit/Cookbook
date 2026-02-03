@@ -389,3 +389,78 @@ main {
 .btn-favorite.animate {
     animation: heartBeat 0.4s ease-in-out;
 }
+
+/* ==========================================================================
+   Quill Editor Styling
+   ========================================================================== */
+
+#notes-editor {
+    min-height: 120px;
+    background: white;
+}
+
+.ql-toolbar {
+    border-radius: 0.375rem 0.375rem 0 0;
+    border-color: var(--bs-border-color);
+}
+
+.ql-container {
+    border-radius: 0 0 0.375rem 0.375rem;
+    border-color: var(--bs-border-color);
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.ql-editor {
+    min-height: 100px;
+}
+
+.ql-editor.ql-blank::before {
+    font-style: normal;
+    color: var(--bs-secondary-color);
+}
+
+/* Notes content display styling */
+.notes-content {
+    line-height: 1.6;
+    color: var(--bs-secondary-color);
+}
+
+.notes-content p {
+    margin-top: 0;
+    margin-bottom: 1rem !important;
+}
+
+.notes-content p:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Handle Quill's empty paragraphs used for line breaks */
+.notes-content p br {
+    display: block;
+    content: "";
+}
+
+.notes-content p:empty,
+.notes-content p:has(> br:only-child) {
+    min-height: 1.6em;
+}
+
+.notes-content ul,
+.notes-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0;
+}
+
+.notes-content li {
+    margin-bottom: 0.25rem;
+}
+
+.notes-content a {
+    color: var(--bs-primary);
+}
+
+.notes-content strong {
+    font-weight: 600;
+}
