@@ -9,9 +9,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (including Pango/Cairo for PDF generation)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies

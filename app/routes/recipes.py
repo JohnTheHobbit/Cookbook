@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
+from io import BytesIO
+from weasyprint import HTML
 import bleach
 from app import db
 from app.models import Recipe, Ingredient, Category, RecipeSection, SectionIngredient
@@ -128,6 +130,30 @@ def print_view(id):
     """Print-friendly recipe view."""
     recipe = Recipe.query.get_or_404(id)
     return render_template('recipes/print.html', recipe=recipe)
+
+
+@bp.route('/<int:id>/download-pdf')
+def download_pdf(id):
+    """Download recipe as PDF."""
+    recipe = Recipe.query.get_or_404(id)
+
+    # Render the print template to HTML
+    html_content = render_template('recipes/print.html', recipe=recipe)
+
+    # Convert to PDF
+    pdf_buffer = BytesIO()
+    HTML(string=html_content, base_url=request.url_root).write_pdf(pdf_buffer)
+    pdf_buffer.seek(0)
+
+    # Sanitize filename (remove special characters)
+    safe_title = "".join(c for c in recipe.title if c.isalnum() or c in (' ', '-', '_')).strip()
+
+    return send_file(
+        pdf_buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'{safe_title}.pdf'
+    )
 
 
 def save_recipe(recipe):
