@@ -6,6 +6,11 @@
     <title>{{ recipe.title }} - Print</title>
     <style>
         /* Print-optimized styles */
+        @page {
+            margin: 0.5in 0.5in 0.5in 1in; /* top right bottom left */
+            size: letter;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -19,7 +24,7 @@
             color: #333;
             max-width: 8.5in;
             margin: 0 auto;
-            padding: 0.5in;
+            padding: 0.5in 0.5in 0.5in 1in; /* top right bottom left - for screen preview */
         }
 
         h1 {
@@ -120,6 +125,79 @@
             border-bottom: 1px solid #2c7be5;
         }
 
+        /* Sectioned recipe - All ingredients grid */
+        .all-ingredients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(2in, 1fr));
+            gap: 0.3in;
+            margin-bottom: 0.3in;
+            padding-bottom: 0.25in;
+            border-bottom: 2px solid #333;
+        }
+
+        /* Limit to max 3 columns when CSS variables are supported */
+        @supports (grid-template-columns: repeat(3, 1fr)) {
+            .all-ingredients-grid {
+                grid-template-columns: repeat(min(var(--cols, 1), 3), 1fr);
+            }
+        }
+
+        .section-ingredients-column {
+            border-right: 1px solid #ddd;
+            padding-right: 0.2in;
+        }
+
+        .section-ingredients-column:nth-child(3n),
+        .section-ingredients-column:last-child {
+            border-right: none;
+        }
+
+        .section-ingredient-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #2c7be5;
+            margin-bottom: 0.1in;
+            padding-bottom: 0.05in;
+            border-bottom: 1px solid #2c7be5;
+        }
+
+        .section-ingredient-list {
+            list-style: none;
+        }
+
+        .section-ingredient-list li {
+            padding: 0.03in 0;
+            font-size: 10pt;
+        }
+
+        /* All instructions section */
+        .all-instructions h2 {
+            font-size: 14pt;
+            border-bottom: 2px solid #333;
+            padding-bottom: 0.1in;
+            margin-bottom: 0.2in;
+        }
+
+        .section-instructions {
+            margin-bottom: 0.25in;
+        }
+
+        .section-instruction-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #2c7be5;
+            margin-bottom: 0.1in;
+        }
+
+        .section-instructions ol {
+            padding-left: 0.25in;
+        }
+
+        .section-instructions li {
+            padding: 0.05in 0;
+            font-size: 10pt;
+        }
+
         .no-print {
             margin-top: 0.5in;
             text-align: center;
@@ -127,7 +205,7 @@
 
         @media print {
             body {
-                padding: 0;
+                padding: 0; /* Use @page margins only for print */
             }
 
             .no-print {
@@ -169,45 +247,51 @@
         {% if recipe.cook_time_minutes %}
             <span>Cook: {{ recipe.cook_time_minutes }} min</span>
         {% endif %}
+        {% if recipe.rest_time_minutes %}
+            <span>Rest: {{ recipe.rest_time_minutes }} min</span>
+        {% endif %}
         {% if recipe.servings %}
             <span>Serves: {{ recipe.servings }} {{ recipe.servings_unit }}</span>
         {% endif %}
     </div>
 
     {% if recipe.has_sections %}
-        <!-- Sectioned Layout -->
-        {% for section in recipe.sections %}
-        <div class="recipe-section">
-            <h2 class="section-title">{{ section.name }}</h2>
-            <div class="content">
-                <div class="ingredients">
-                    <h2>Ingredients</h2>
-                    <ul>
-                        {% for ing in section.ingredients %}
-                            <li>
-                                {% if ing.quantity %}{{ ing.quantity }}{% endif %}
-                                {% if ing.unit %}{{ ing.unit }}{% endif %}
-                                {{ ing.name }}
-                                {% if ing.preparation %}, {{ ing.preparation }}{% endif %}
-                                {% if ing.is_optional %}(optional){% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <div class="instructions">
-                    <h2>Instructions</h2>
-                    <ol>
-                        {% for step in section.instructions.split('\n') %}
-                            {% if step.strip() %}
-                                <li>{{ step.strip() }}</li>
-                            {% endif %}
-                        {% endfor %}
-                    </ol>
-                </div>
+        <!-- Sectioned Layout - All Ingredients First -->
+        <div class="all-ingredients-grid" style="--cols: {{ recipe.sections.all()|length }}">
+            {% for section in recipe.sections %}
+            <div class="section-ingredients-column">
+                <h3 class="section-ingredient-title">{{ section.name }}</h3>
+                <ul class="section-ingredient-list">
+                    {% for ing in section.ingredients %}
+                        <li>
+                            {% if ing.quantity %}{{ ing.quantity }}{% endif %}
+                            {% if ing.unit %}{{ ing.unit }}{% endif %}
+                            {{ ing.name }}
+                            {% if ing.preparation %}, {{ ing.preparation }}{% endif %}
+                            {% if ing.is_optional %}(optional){% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+
+        <!-- All Instructions -->
+        <div class="all-instructions">
+            <h2>Instructions</h2>
+            {% for section in recipe.sections %}
+            <div class="section-instructions">
+                <h3 class="section-instruction-title">{{ section.name }}</h3>
+                <ol>
+                    {% for step in section.instructions.split('\n') %}
+                        {% if step.strip() %}
+                            <li>{{ step.strip() }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ol>
+            </div>
+            {% endfor %}
+        </div>
     {% else %}
         <!-- Simple Layout -->
         <div class="content">

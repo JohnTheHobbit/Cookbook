@@ -74,6 +74,14 @@
                         </div>
 
                         <div class="col-md-3">
+                            <label for="rest_time_minutes" class="form-label">Rest Time (minutes)</label>
+                            <input type="number" class="form-control" id="rest_time_minutes" name="rest_time_minutes"
+                                   value="{{ recipe.rest_time_minutes if recipe and recipe.rest_time_minutes else '' }}"
+                                   min="0" placeholder="60">
+                            <div class="form-text">Rising, chilling, marinating</div>
+                        </div>
+
+                        <div class="col-md-3">
                             <label for="servings" class="form-label">Servings</label>
                             <input type="number" class="form-control" id="servings" name="servings"
                                    value="{{ recipe.servings if recipe and recipe.servings else '' }}"

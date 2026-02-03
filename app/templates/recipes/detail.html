@@ -70,7 +70,10 @@
         {% if recipe.cook_time_minutes %}
             <span><i class="bi bi-fire"></i> Cook: {{ recipe.cook_time_minutes }} min</span>
         {% endif %}
-        {% if recipe.total_time_minutes %}
+        {% if recipe.rest_time_minutes %}
+            <span><i class="bi bi-moon-stars"></i> Rest: {{ recipe.rest_time_minutes }} min</span>
+        {% endif %}
+        {% if recipe.total_time_minutes or recipe.rest_time_minutes %}
             <span><i class="bi bi-clock"></i> Total: {{ recipe.formatted_total_time }}</span>
         {% endif %}
         {% if recipe.servings %}

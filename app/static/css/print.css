@@ -157,10 +157,10 @@
 
 /* Print-specific recipe layout */
 @page {
-    margin: 1in;
+    margin: 0;
     size: letter;
 }
 
 @page :first {
-    margin-top: 0.5in;
+    margin: 0;
 }
