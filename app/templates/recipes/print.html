@@ -6,6 +6,11 @@
     <title>{{ recipe.title }} - Print</title>
     <style>
         /* Print-optimized styles */
+        @page {
+            margin: 0.5in 0.5in 0.5in 1in; /* top right bottom left */
+            size: letter;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -19,7 +24,7 @@
             color: #333;
             max-width: 8.5in;
             margin: 0 auto;
-            padding: 0.5in 0.5in 0.5in 1in; /* top right bottom left */
+            padding: 0.5in 0.5in 0.5in 1in; /* top right bottom left - for screen preview */
         }
 
         h1 {
@@ -200,7 +205,7 @@
 
         @media print {
             body {
-                padding: 0.5in 0.5in 0.5in 1in; /* top right bottom left */
+                padding: 0; /* Use @page margins only for print */
             }
 
             .no-print {
