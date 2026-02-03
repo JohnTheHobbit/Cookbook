@@ -7,6 +7,8 @@ A self-hosted recipe management application for your home network. Built with Fl
 - **Search recipes** by name, description, or ingredients
 - **Filter recipes** by category
 - **Add/edit recipes** with a user-friendly form
+- **Recipe sections** - organize complex recipes into parts (e.g., "Shell" and "Filling" for cannoli)
+- **Rich text notes** - format notes with bold, italic, lists, and links
 - **Import recipes** from CSV with downloadable template
 - **Export recipes** to CSV for backup
 - **Favorite recipes** for quick access
@@ -89,6 +91,51 @@ Add the data directory to Hyper Backup:
 
 The SQLite database is a single file (`cookbook.db`), making backups simple.
 
+## Kubernetes (K3S) Deployment
+
+For K3S clusters with persistent storage:
+
+1. **Create namespace and PVC:**
+   ```yaml
+   # 01-namespace.yaml
+   apiVersion: v1
+   kind: Namespace
+   metadata:
+     name: cookbook
+   ---
+   # 02-pvc.yaml
+   apiVersion: v1
+   kind: PersistentVolumeClaim
+   metadata:
+     name: cookbook-data
+     namespace: cookbook
+   spec:
+     accessModes:
+       - ReadWriteOnce
+     storageClassName: local-path
+     resources:
+       requests:
+         storage: 1Gi
+   ```
+
+2. **Deploy with volume mount:**
+   ```yaml
+   # deployment.yaml
+   spec:
+     containers:
+       - name: cookbook
+         image: registry.example.com/home-cookbook:latest
+         volumeMounts:
+           - name: data
+             mountPath: /app/data
+     volumes:
+       - name: data
+         persistentVolumeClaim:
+           claimName: cookbook-data
+   ```
+
+3. **Apply with kubectl or ArgoCD**
+
 ## CSV Import Format
 
 Download the template from the Import page or use this format:
@@ -104,7 +151,7 @@ Download the template from the Import page or use this format:
 | servings_unit | No | e.g., "servings", "pieces" |
 | ingredients | No | Pipe-separated: `2 cups flour\|1 tsp salt` |
 | instructions | Yes | Step-by-step instructions |
-| notes | No | Additional tips |
+| notes | No | Additional tips (supports HTML formatting) |
 | source | No | Where recipe came from |
 
 ### Ingredient Format
@@ -114,6 +161,24 @@ Ingredients are parsed automatically:
 - `1/2 tsp salt` → quantity: 0.5, unit: tsp, name: salt
 - `butter, melted` → name: butter, preparation: melted
 - `parsley (optional)` → name: parsley, optional: true
+
+### Sectioned Recipes
+
+For recipes with multiple sections (e.g., a cannoli with separate Shell and Filling), use section markers:
+
+**Ingredients column:**
+```
+[Shell]2 cups flour|1/2 cup butter[Filling]2 cups ricotta|1 cup sugar
+```
+
+**Instructions column:**
+```
+[Shell]Step 1 for shell
+Step 2 for shell[Filling]Step 1 for filling
+Step 2 for filling
+```
+
+Each section name in square brackets groups the ingredients and instructions that follow it.
 
 ## Environment Variables
 
@@ -148,8 +213,9 @@ cookbook/
 
 - **Backend:** Python 3.11, Flask
 - **Database:** SQLite with SQLAlchemy ORM
-- **Frontend:** Bootstrap 5, htmx
-- **Deployment:** Docker, Gunicorn
+- **Frontend:** Bootstrap 5, htmx, Quill Editor
+- **Security:** Bleach for HTML sanitization
+- **Deployment:** Docker, Gunicorn, Kubernetes/K3S
 
 ## License
 
