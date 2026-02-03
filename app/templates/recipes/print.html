@@ -241,7 +241,8 @@
 
     {% if recipe.notes %}
         <div class="notes">
-            <strong>Notes:</strong> {{ recipe.notes }}
+            <strong>Notes:</strong>
+            <div class="notes-content">{{ recipe.notes|safe }}</div>
         </div>
     {% endif %}
 

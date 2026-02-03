@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initIngredientForm();
     initSectionForm();
     initUnitConversion();
+    initNotesEditor();
 });
 
 /**
@@ -529,4 +530,48 @@ if (searchInput && searchInput.hasAttribute('data-live-search')) {
             // htmx handles this
         }, 300);
     });
+}
+
+/**
+ * Notes Editor - Quill WYSIWYG
+ */
+function initNotesEditor() {
+    const editorContainer = document.getElementById('notes-editor');
+    if (!editorContainer) return;
+
+    // Check if Quill is available
+    if (typeof Quill === 'undefined') return;
+
+    const quill = new Quill('#notes-editor', {
+        theme: 'snow',
+        placeholder: 'Any additional tips, variations, or personal notes...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+
+    // Load existing content from hidden input
+    const hiddenInput = document.getElementById('notes');
+    if (hiddenInput && hiddenInput.value) {
+        quill.root.innerHTML = hiddenInput.value;
+    }
+
+    // Sync editor content to hidden input on form submit
+    const form = editorContainer.closest('form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const content = quill.root.innerHTML;
+            // Don't save empty editor content
+            if (content === '<p><br></p>' || content === '<p></p>') {
+                hiddenInput.value = '';
+            } else {
+                hiddenInput.value = content;
+            }
+        });
+    }
 }
